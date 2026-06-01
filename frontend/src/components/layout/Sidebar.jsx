@@ -10,13 +10,23 @@ const navItems = [
   },
   {
     path: '/mon-vehicule', label: 'Mon véhicule',
-    roles: ['CONDUCTEUR'],
+    roles: ['CONDUCTEUR'], exclusive: true,
     icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10l1 1h1m8-1V7a1 1 0 011-1h2l3 4v5l-1 1h-1m-6 0h6" /></svg>,
   },
   {
     path: '/vehicules', label: 'Flotte',
     roles: ['GESTIONNAIRE', 'ADMIN'],
     icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10l1 1h1m8-1V7a1 1 0 011-1h2l3 4v5l-1 1h-1m-6 0h6" /></svg>,
+  },
+  {
+    path: '/vue-flotte', label: 'Vue flotte',
+    roles: ['GESTIONNAIRE', 'ADMIN'],
+    icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" /></svg>,
+  },
+  {
+    path: '/affectations', label: 'Affectations',
+    roles: ['GESTIONNAIRE', 'ADMIN'],
+    icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-2a4 4 0 100-8 4 4 0 000 8zm6 0a3 3 0 11-6 0 3 3 0 016 0z" /></svg>,
   },
   {
     path: '/entretiens', label: 'Entretiens',
@@ -40,7 +50,11 @@ export function Sidebar() {
   const navigate = useNavigate()
 
   const handleLogout = () => { logout(); navigate('/login') }
-  const visibleItems = navItems.filter(item => item.roles.some(r => hasRole(r)))
+  const visibleItems = navItems.filter(item =>
+    item.exclusive
+      ? item.roles.includes(user?.role)
+      : item.roles.some(r => hasRole(r))
+  )
 
   return (
     <aside className="w-64 flex flex-col h-screen sticky top-0 border-r border-white/5"
