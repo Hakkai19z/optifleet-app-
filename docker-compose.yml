@@ -9,7 +9,7 @@ services:
     ports:
       - "8000:8000"
     environment:
-      DATABASE_URL: postgresql://optifleet:secret@db:5432/optifleet
+      DATABASE_URL: "postgresql://optifleet:secret@db:5432/optifleet?serverVersion=16&charset=utf8"
       APP_ENV: dev
       APP_SECRET: ${APP_SECRET:-changeme_in_production}
       JWT_SECRET_KEY: /app/config/jwt/private.pem

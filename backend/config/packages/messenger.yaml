@@ -1,0 +1,23 @@
+framework:
+    messenger:
+        failure_transport: failed
+        transports:
+            async:
+                dsn: '%env(MESSENGER_TRANSPORT_DSN)%'
+                options:
+                    use_notify: true
+                    check_delayed_interval: 60000
+                retry_strategy:
+                    max_retries: 3
+                    multiplier: 2
+            failed:
+                dsn: 'doctrine://default?queue_name=failed'
+            sync: 'sync://'
+        routing:
+            App\Scheduler\VerifierAlertesMessage: sync
+
+when@test:
+    framework:
+        messenger:
+            transports:
+                async: 'in-memory://'
