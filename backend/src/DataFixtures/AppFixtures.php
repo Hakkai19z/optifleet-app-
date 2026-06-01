@@ -59,15 +59,15 @@ class AppFixtures extends Fixture
         $manager->persist($catSUV);
 
         $vehicules = [
-            ['AB-123-CD', 'Renault', 'Clio', 2022, 45000, 'disponible', $catBerline, 50000],
-            ['EF-456-GH', 'Peugeot', '308', 2021, 62000, 'en_mission', $catBerline, 60000],
-            ['IJ-789-KL', 'Citroën', 'Berlingo', 2020, 89000, 'disponible', $catUtilitaire, 100000],
-            ['MN-012-OP', 'Ford', 'Transit', 2019, 110000, 'maintenance', $catUtilitaire, 120000],
-            ['QR-345-ST', 'Toyota', 'RAV4', 2023, 15000, 'disponible', $catSUV, 30000],
+            ['AB-123-CD', 'Renault', 'Clio',     2022, 45000,  'disponible',  $catBerline,    50000,  '12 Avenue des Champs-Élysées, Paris'],
+            ['EF-456-GH', 'Peugeot', '308',      2021, 62000,  'en_mission',  $catBerline,    60000,  '1 Place Bellecour, Lyon'],
+            ['IJ-789-KL', 'Citroën', 'Berlingo', 2020, 89000,  'disponible',  $catUtilitaire, 100000, '20 Rue de la République, Marseille'],
+            ['MN-012-OP', 'Ford',    'Transit',  2019, 110000, 'maintenance', $catUtilitaire, 120000, '5 Place du Capitole, Toulouse'],
+            ['QR-345-ST', 'Toyota',  'RAV4',     2023, 15000,  'disponible',  $catSUV,        30000,  '3 Rue Nationale, Lille'],
         ];
 
         $vehiculeEntities = [];
-        foreach ($vehicules as [$immat, $marque, $modele, $annee, $km, $statut, $cat, $quota]) {
+        foreach ($vehicules as [$immat, $marque, $modele, $annee, $km, $statut, $cat, $quota, $adresse]) {
             $v = new Vehicule();
             $v->setImmatriculation($immat);
             $v->setMarque($marque);
@@ -77,6 +77,7 @@ class AppFixtures extends Fixture
             $v->setStatut($statut);
             $v->setCategorie($cat);
             $v->setQuotaKmAnnuel($quota);
+            $v->setAdresse($adresse);
             $manager->persist($v);
             $vehiculeEntities[] = $v;
         }
