@@ -2,6 +2,7 @@
 
 namespace App\DataFixtures;
 
+use App\Entity\Affectation;
 use App\Entity\Alerte;
 use App\Entity\Categorie;
 use App\Entity\Entretien;
@@ -43,6 +44,25 @@ class AppFixtures extends Fixture
         $conducteur->setMotDePasse($this->passwordHasher->hashPassword($conducteur, 'Cond@1234'));
         $manager->persist($conducteur);
 
+        // Conducteurs supplémentaires pour la démo des affectations
+        $autresConducteurs = [
+            ['Durand', 'Sophie', 'sophie.durand@optifleet.fr'],
+            ['Bernard', 'Lucas', 'lucas.bernard@optifleet.fr'],
+            ['Petit', 'Emma', 'emma.petit@optifleet.fr'],
+            ['Moreau', 'Hugo', 'hugo.moreau@optifleet.fr'],
+        ];
+        $conducteurEntities = [$conducteur];
+        foreach ($autresConducteurs as [$nom, $prenom, $email]) {
+            $c = new Utilisateur();
+            $c->setNom($nom);
+            $c->setPrenom($prenom);
+            $c->setEmail($email);
+            $c->setRole('CONDUCTEUR');
+            $c->setMotDePasse($this->passwordHasher->hashPassword($c, 'Cond@1234'));
+            $manager->persist($c);
+            $conducteurEntities[] = $c;
+        }
+
         $catBerline = new Categorie();
         $catBerline->setLibelle('Berline');
         $catBerline->setDescription('Voiture berline de fonction');
@@ -58,8 +78,9 @@ class AppFixtures extends Fixture
         $catSUV->setDescription('Sport Utility Vehicle');
         $manager->persist($catSUV);
 
+        // statut: en_mission = véhicule affecté à un conducteur ci-dessous
         $vehicules = [
-            ['AB-123-CD', 'Renault', 'Clio',     2022, 45000,  'disponible',  $catBerline,    50000,  '12 Avenue des Champs-Élysées, Paris'],
+            ['AB-123-CD', 'Renault', 'Clio',     2022, 45000,  'en_mission',  $catBerline,    50000,  '12 Avenue des Champs-Élysées, Paris'],
             ['EF-456-GH', 'Peugeot', '308',      2021, 62000,  'en_mission',  $catBerline,    60000,  '1 Place Bellecour, Lyon'],
             ['IJ-789-KL', 'Citroën', 'Berlingo', 2020, 89000,  'disponible',  $catUtilitaire, 100000, '20 Rue de la République, Marseille'],
             ['MN-012-OP', 'Ford',    'Transit',  2019, 110000, 'maintenance', $catUtilitaire, 120000, '5 Place du Capitole, Toulouse'],
@@ -80,6 +101,20 @@ class AppFixtures extends Fixture
             $v->setAdresse($adresse);
             $manager->persist($v);
             $vehiculeEntities[] = $v;
+        }
+
+        // Affectations actives : Pierre -> Clio, Sophie -> 308
+        $affectationsInitiales = [
+            [$conducteurEntities[0], $vehiculeEntities[0], 'Véhicule de fonction attribué'],
+            [$conducteurEntities[1], $vehiculeEntities[1], 'Mission commerciale région Rhône-Alpes'],
+        ];
+        foreach ($affectationsInitiales as [$cond, $veh, $comment]) {
+            $aff = new Affectation();
+            $aff->setConducteur($cond);
+            $aff->setVehicule($veh);
+            $aff->setDateDebut(new \DateTime('-2 weeks'));
+            $aff->setCommentaire($comment);
+            $manager->persist($aff);
         }
 
         $entretien = new Entretien();
