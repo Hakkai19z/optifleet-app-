@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react'
 import { Layout } from '../../components/layout/Layout'
 import { TopBar } from '../../components/layout/TopBar'
+import { Card } from '../../components/ui/Card'
 import { Badge } from '../../components/ui/Badge'
 import { SkeletonCard } from '../../components/ui/Skeleton'
+import { KmQuotaBar } from '../../components/ui/KmQuotaBar'
+import { MapWidget } from '../../components/ui/MapWidget'
 import api from '../../services/api'
 
 const TYPE_LABELS = {
@@ -123,6 +126,29 @@ export default function MonVehicule() {
             </div>
           </div>
         </div>
+
+        {/* Quota km */}
+        {vehicule.quotaKmAnnuel && (
+          <Card>
+            <h3 className="font-display font-semibold text-white mb-4">Quota kilométrique annuel</h3>
+            <KmQuotaBar
+              kilometrage={vehicule.kilometrage}
+              quotaKmAnnuel={vehicule.quotaKmAnnuel}
+            />
+          </Card>
+        )}
+
+        {/* Map */}
+        {(vehicule.latitude && vehicule.longitude) && (
+          <Card>
+            <h3 className="font-display font-semibold text-white mb-4">Ma position actuelle</h3>
+            <MapWidget
+              latitude={vehicule.latitude}
+              longitude={vehicule.longitude}
+              adresse={vehicule.adresse}
+            />
+          </Card>
+        )}
 
         {/* Maintenance history */}
         <div className="glass-card p-6">
