@@ -1,0 +1,69 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# PHP / Symfony
+/backend/vendor/
+/backend/var/
+/backend/var/cache/
+/backend/var/log/
+/backend/.env
+/backend/.env.local
+/backend/.env.*.local
+/backend/config/jwt/private.pem
+/backend/config/jwt/public.pem
+/backend/.php-cs-fixer.cache
+/backend/.phpunit.result.cache
+/backend/coverage/
+/backend/coverage.xml
+
+# Node / React
+/frontend/node_modules/
+/frontend/dist/
+/frontend/build/
+/frontend/.env
+/frontend/.env.local
+/frontend/.env.*.local
+/frontend/coverage/
+
+# Docker secrets / env files
+.env
+.env.local
+.env.*.local
+docker-compose.override.yml
+*.pem
+*.key
+*.p12
+*.pfx
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.backup
