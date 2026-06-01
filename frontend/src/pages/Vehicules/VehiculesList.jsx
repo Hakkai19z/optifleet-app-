@@ -7,6 +7,7 @@ import { Button } from '../../components/ui/Button'
 import { Badge } from '../../components/ui/Badge'
 import { Table } from '../../components/ui/Table'
 import { SkeletonTable } from '../../components/ui/Skeleton'
+import { KmQuotaBar } from '../../components/ui/KmQuotaBar'
 import { useVehicules } from '../../hooks/useVehicules'
 import { useAuth } from '../../hooks/useAuth'
 
@@ -26,25 +27,30 @@ export default function VehiculesList() {
 
   const columns = [
     { key: 'immatriculation', label: 'Immatriculation', render: (row) => (
-      <span className="font-mono font-bold text-violet-400">{row.immatriculation}</span>
+      <span className="font-mono font-semibold text-white">{row.immatriculation}</span>
     )},
-    { key: 'marque', label: 'Véhicule', render: (row) => (
+    { key: 'vehicule', label: 'Véhicule', render: (row) => (
       <div>
         <p className="font-medium text-white">{row.marque} {row.modele}</p>
         <p className="text-xs text-slate-500">{row.annee}</p>
       </div>
     )},
-    { key: 'kilometrage', label: 'Kilométrage', render: (row) => (
-      <span className="text-slate-300">{row.kilometrage.toLocaleString('fr-FR')} km</span>
+    { key: 'kilometrage', label: 'Kilométrage / Quota', render: (row) => (
+      <div className="min-w-32">
+        <p className="text-sm text-slate-300 mb-1">{row.kilometrage.toLocaleString('fr-FR')} km</p>
+        <KmQuotaBar
+          kilometrage={row.kilometrage}
+          quotaKmAnnuel={row.quotaKmAnnuel}
+          showLabel={false}
+        />
+      </div>
     )},
     { key: 'categorie', label: 'Catégorie', render: (row) => (
       <span className="text-slate-400">{row.categorie?.libelle || '—'}</span>
     )},
-    { key: 'statut', label: 'Statut', render: (row) => (
-      <Badge variant={row.statut} />
-    )},
+    { key: 'statut', label: 'Statut', render: (row) => <Badge variant={row.statut} /> },
     { key: 'actions', label: '', render: (row) => (
-      <Button variant="ghost" onClick={(e) => { e.stopPropagation(); navigate(`/vehicules/${row.id}`) }}>
+      <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); navigate(`/vehicules/${row.id}`) }}>
         Détails →
       </Button>
     )},
