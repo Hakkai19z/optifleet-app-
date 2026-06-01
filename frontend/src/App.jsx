@@ -4,6 +4,7 @@ import { useAuth } from './hooks/useAuth'
 
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
+import MonVehicule from './pages/Conducteur/MonVehicule'
 import VehiculesList from './pages/Vehicules/VehiculesList'
 import VehiculeDetail from './pages/Vehicules/VehiculeDetail'
 import VehiculeForm from './pages/Vehicules/VehiculeForm'
@@ -31,6 +32,10 @@ export default function App() {
 
         <Route path="/dashboard" element={
           <ProtectedRoute><Dashboard /></ProtectedRoute>
+        } />
+
+        <Route path="/mon-vehicule" element={
+          <ProtectedRoute><MonVehicule /></ProtectedRoute>
         } />
 
         <Route path="/vehicules" element={
