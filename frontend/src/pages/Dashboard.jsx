@@ -1,154 +1,199 @@
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
 import { Layout } from '../components/layout/Layout'
 import { TopBar } from '../components/layout/TopBar'
-import { Card } from '../components/ui/Card'
 import { SkeletonCard } from '../components/ui/Skeleton'
 import { dashboardService } from '../services/dashboardService'
+import { useAuth } from '../hooks/useAuth'
 
-const STATUT_COLORS = {
-  disponible: '#0F6E56',
-  en_mission: '#185FA5',
-  maintenance: '#854F0B',
-  inactif: '#9CA3AF',
+const STATUT_CONFIG = {
+  disponible: { color: '#10B981', label: 'Disponible' },
+  en_mission: { color: '#3B82F6', label: 'En mission' },
+  maintenance: { color: '#F59E0B', label: 'Maintenance' },
+  inactif: { color: '#6B7280', label: 'Inactif' },
 }
 
-const STATUT_LABELS = {
-  disponible: 'Disponible',
-  en_mission: 'En mission',
-  maintenance: 'Maintenance',
-  inactif: 'Inactif',
-}
-
-function KpiCard({ title, value, subtitle, accent, icon }) {
+function StatCard({ title, value, subtitle, icon, gradient, trend }) {
   return (
-    <Card accent={accent} className="flex items-start gap-4">
-      <div className={`p-3 rounded-xl ${
-        accent === 'primary' ? 'bg-primary/10' :
-        accent === 'blue' ? 'bg-blue-50' :
-        accent === 'teal' ? 'bg-teal-50' :
-        accent === 'amber' ? 'bg-amber-50' : 'bg-gray-100'
-      }`}>
-        {icon}
+    <div className="glass-card-hover p-6 group relative overflow-hidden">
+      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+        style={{ background: `radial-gradient(circle at 80% 20%, ${gradient}15, transparent 60%)` }} />
+      <div className="relative z-10">
+        <div className="flex items-start justify-between mb-4">
+          <div className="w-11 h-11 rounded-2xl flex items-center justify-center"
+            style={{ background: `${gradient}20`, border: `1px solid ${gradient}30` }}>
+            <span style={{ color: gradient }}>{icon}</span>
+          </div>
+          {trend !== undefined && (
+            <span className={`text-xs font-semibold px-2 py-1 rounded-full ${trend >= 0 ? 'bg-emerald-500/15 text-emerald-400' : 'bg-red-500/15 text-red-400'}`}>
+              {trend >= 0 ? '↑' : '↓'} {Math.abs(trend)}%
+            </span>
+          )}
+        </div>
+        <p className="text-3xl font-display font-bold text-white mb-1">{value}</p>
+        <p className="text-sm font-medium" style={{ color: 'rgba(241,245,249,0.8)' }}>{title}</p>
+        {subtitle && <p className="text-xs text-slate-500 mt-1">{subtitle}</p>}
       </div>
-      <div>
-        <p className="text-sm text-gray-500">{title}</p>
-        <p className="text-2xl font-bold text-dark mt-0.5">{value}</p>
-        {subtitle && <p className="text-xs text-gray-400 mt-0.5">{subtitle}</p>}
-      </div>
-    </Card>
+    </div>
   )
 }
+
+const mockAreaData = [
+  { month: 'Jan', cout: 2400 }, { month: 'Fév', cout: 1800 },
+  { month: 'Mar', cout: 3200 }, { month: 'Avr', cout: 2800 },
+  { month: 'Mai', cout: 3600 }, { month: 'Jun', cout: 4200 },
+]
 
 export default function Dashboard() {
   const [stats, setStats] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
+  const { user, hasRole } = useAuth()
 
   useEffect(() => {
-    dashboardService.getStats()
-      .then(setStats)
-      .finally(() => setIsLoading(false))
+    dashboardService.getStats().then(setStats).finally(() => setIsLoading(false))
   }, [])
 
   const pieData = stats ? Object.entries(stats.vehicules.parStatut).map(([name, value]) => ({
-    name: STATUT_LABELS[name] || name,
+    name: STATUT_CONFIG[name]?.label || name,
     value,
-    color: STATUT_COLORS[name] || '#9CA3AF',
+    color: STATUT_CONFIG[name]?.color || '#6B7280',
   })) : []
+
+  const total = stats?.vehicules.total || 0
 
   return (
     <Layout>
-      <TopBar title="Tableau de bord" subtitle="Vue d'ensemble de la flotte" />
-      <div className="p-8 space-y-8">
+      <TopBar
+        title={`Bonjour, ${user?.prenom} 👋`}
+        subtitle="Voici l'état de votre flotte en temps réel"
+      />
+
+      <div className="p-8 space-y-8 animate-slide-up">
+        {/* KPI Cards */}
         {isLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
             {[...Array(4)].map((_, i) => <SkeletonCard key={i} />)}
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <KpiCard
-              title="Total véhicules"
-              value={stats?.vehicules.total ?? 0}
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+            <StatCard
+              title="Véhicules totaux"
+              value={total}
               subtitle="Ensemble de la flotte"
-              accent="primary"
-              icon={<svg className="w-6 h-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10l1 1h1m8-1V7a1 1 0 011-1h2l3 4v5l-1 1h-1m-6 0h6" /></svg>}
+              gradient="#6C63FF"
+              trend={5}
+              icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10l1 1h1m8-1V7a1 1 0 011-1h2l3 4v5l-1 1h-1m-6 0h6" /></svg>}
             />
-            <KpiCard
+            <StatCard
               title="Disponibles"
               value={stats?.vehicules.parStatut?.disponible ?? 0}
-              subtitle={`Taux: ${stats?.vehicules.tauxDisponibilite ?? 0}%`}
-              accent="teal"
-              icon={<svg className="w-6 h-6 text-teal-fleet" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
+              subtitle={`Taux : ${stats?.vehicules.tauxDisponibilite ?? 0}%`}
+              gradient="#10B981"
+              trend={2}
+              icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
             />
-            <KpiCard
+            <StatCard
               title="Alertes actives"
               value={stats?.alertes.actives ?? 0}
-              subtitle="À traiter"
-              accent="amber"
-              icon={<svg className="w-6 h-6 text-amber-fleet" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>}
+              subtitle="À traiter en priorité"
+              gradient="#F59E0B"
+              trend={-10}
+              icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>}
             />
-            <KpiCard
+            <StatCard
               title="Coût maintenance"
               value={`${(stats?.maintenance.cout12Mois ?? 0).toLocaleString('fr-FR')} €`}
               subtitle="12 derniers mois"
-              accent="blue"
-              icon={<svg className="w-6 h-6 text-blue-fleet" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
+              gradient="#00D4FF"
+              icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" /></svg>}
             />
           </div>
         )}
 
-        {!isLoading && stats && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card>
-              <h3 className="text-base font-semibold text-dark mb-4">Répartition par statut</h3>
-              <div className="flex items-center gap-6">
-                <ResponsiveContainer width="50%" height={180}>
-                  <PieChart>
-                    <Pie data={pieData} cx="50%" cy="50%" innerRadius={50} outerRadius={80} dataKey="value">
-                      {pieData.map((entry, index) => (
-                        <Cell key={index} fill={entry.color} />
-                      ))}
+        {/* Charts Row */}
+        {!isLoading && (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Area Chart */}
+            <div className="glass-card p-6 lg:col-span-2">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h3 className="font-display font-semibold text-white">Coûts de maintenance</h3>
+                  <p className="text-xs text-slate-500 mt-0.5">Évolution sur 6 mois</p>
+                </div>
+                <span className="text-xs px-3 py-1 rounded-full font-medium"
+                  style={{ background: 'rgba(108,99,255,0.15)', color: '#A78BFA' }}>2026</span>
+              </div>
+              <ResponsiveContainer width="100%" height={200}>
+                <AreaChart data={mockAreaData}>
+                  <defs>
+                    <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#6C63FF" stopOpacity={0.4}/>
+                      <stop offset="100%" stopColor="#6C63FF" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                  <XAxis dataKey="month" tick={{ fill: '#94A3B8', fontSize: 12 }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fill: '#94A3B8', fontSize: 12 }} axisLine={false} tickLine={false} />
+                  <Tooltip contentStyle={{ background: '#1C2437', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', color: '#F1F5F9' }} />
+                  <Area type="monotone" dataKey="cout" stroke="#6C63FF" strokeWidth={2} fill="url(#areaGrad)" />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* Pie Chart */}
+            <div className="glass-card p-6">
+              <h3 className="font-display font-semibold text-white mb-1">Répartition</h3>
+              <p className="text-xs text-slate-500 mb-6">Par statut</p>
+              <div className="flex justify-center mb-4">
+                <div className="relative">
+                  <PieChart width={160} height={160}>
+                    <Pie data={pieData} cx={80} cy={80} innerRadius={50} outerRadius={75} dataKey="value" strokeWidth={0}>
+                      {pieData.map((entry, i) => <Cell key={i} fill={entry.color} />)}
                     </Pie>
-                    <Tooltip formatter={(value, name) => [value, name]} />
                   </PieChart>
-                </ResponsiveContainer>
-                <div className="space-y-2">
-                  {pieData.map((item) => (
-                    <div key={item.name} className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: item.color }} />
-                      <span className="text-sm text-gray-600">{item.name}</span>
-                      <span className="text-sm font-semibold text-dark ml-auto">{item.value}</span>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="text-center">
+                      <p className="font-display text-2xl font-bold text-white">{total}</p>
+                      <p className="text-xs text-slate-500">Total</p>
                     </div>
-                  ))}
+                  </div>
                 </div>
               </div>
-            </Card>
-
-            <Card>
-              <h3 className="text-base font-semibold text-dark mb-4">Accès rapide</h3>
-              <div className="grid grid-cols-2 gap-3">
-                {[
-                  { to: '/vehicules', label: 'Gérer les véhicules', color: 'primary' },
-                  { to: '/entretiens', label: 'Planifier un entretien', color: 'blue' },
-                  { to: '/alertes', label: 'Voir les alertes', color: 'amber' },
-                  { to: '/vehicules/nouveau', label: 'Nouveau véhicule', color: 'teal' },
-                ].map((item) => (
-                  <Link
-                    key={item.to}
-                    to={item.to}
-                    className={`p-4 rounded-xl border-2 text-center text-sm font-medium transition-colors ${
-                      item.color === 'primary' ? 'border-primary/20 text-primary hover:bg-primary hover:text-white' :
-                      item.color === 'blue' ? 'border-blue-200 text-blue-fleet hover:bg-blue-fleet hover:text-white' :
-                      item.color === 'amber' ? 'border-amber-200 text-amber-fleet hover:bg-amber-fleet hover:text-white' :
-                      'border-teal-200 text-teal-fleet hover:bg-teal-fleet hover:text-white'
-                    }`}
-                  >
-                    {item.label}
-                  </Link>
+              <div className="space-y-2">
+                {pieData.map((item) => (
+                  <div key={item.name} className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.color }} />
+                      <span className="text-sm text-slate-400">{item.name}</span>
+                    </div>
+                    <span className="text-sm font-semibold text-white">{item.value}</span>
+                  </div>
                 ))}
               </div>
-            </Card>
+            </div>
+          </div>
+        )}
+
+        {/* Quick Actions — only for GESTIONNAIRE+ */}
+        {hasRole('GESTIONNAIRE') && !isLoading && (
+          <div className="glass-card p-6">
+            <h3 className="font-display font-semibold text-white mb-4">Accès rapide</h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              {[
+                { to: '/vehicules/nouveau', label: '+ Nouveau véhicule', color: '#6C63FF' },
+                { to: '/vehicules', label: 'Voir la flotte', color: '#00D4FF' },
+                { to: '/entretiens', label: 'Entretiens', color: '#10B981' },
+                { to: '/alertes', label: 'Alertes', color: '#F59E0B' },
+              ].map((item) => (
+                <Link key={item.to} to={item.to}
+                  className="p-4 rounded-xl border border-white/5 text-center text-sm font-medium transition-all hover:-translate-y-0.5"
+                  onMouseEnter={(e) => { e.currentTarget.style.borderColor = item.color + '50'; e.currentTarget.style.background = item.color + '10' }}
+                  onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.05)'; e.currentTarget.style.background = '' }}>
+                  <span style={{ color: item.color }}>{item.label}</span>
+                </Link>
+              ))}
+            </div>
           </div>
         )}
       </div>
