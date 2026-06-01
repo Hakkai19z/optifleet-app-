@@ -3,69 +3,140 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Jalon 4 - Conception &amp; Architecture - OptiFleet</title>
+<title>Jalon 4 - Conception & Architecture - OptiFleet</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
 <style>
-  body { font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    max-width: 880px; margin: 0 auto; padding: 40px 48px; color: #1a1a2e; line-height: 1.6; }
-  h1 { color: #4338ca; border-bottom: 3px solid #6C63FF; padding-bottom: 12px; font-size: 28px; }
-  h2 { color: #5B52E0; border-bottom: 1px solid #ddd; padding-bottom: 8px; margin-top: 36px; font-size: 22px; }
-  h3 { color: #1e293b; margin-top: 26px; font-size: 17px; }
-  h4 { color: #334155; font-size: 15px; }
-  table { border-collapse: collapse; width: 100%; margin: 16px 0; font-size: 13px; }
-  th, td { border: 1px solid #d1d5db; padding: 7px 11px; text-align: left; }
-  th { background: #6C63FF; color: white; font-weight: 600; }
-  tr:nth-child(even) { background: #f5f5fb; }
-  code { background: #eef0f7; padding: 2px 6px; border-radius: 4px; font-size: 12.5px;
-    font-family: "SF Mono", Monaco, Consolas, monospace; color: #4338ca; }
-  pre { background: #1a1a2e; color: #e2e8f0; padding: 16px 20px; border-radius: 8px;
-    overflow-x: auto; font-size: 13px; }
+  :root {
+    --primary: #5B52E0; --primary-dark: #4338ca; --accent: #6C63FF;
+    --ink: #1e2235; --muted: #64748b; --line: #e6e8f0; --soft: #f6f6fc;
+  }
+  * { box-sizing: border-box; }
+  body { font-family: 'Inter', -apple-system, sans-serif; color: var(--ink);
+    line-height: 1.65; margin: 0; font-size: 14px; }
+  h1,h2,h3,h4 { font-family: 'Space Grotesk', sans-serif; line-height: 1.25; }
+
+  /* ===== PAGE DE GARDE ===== */
+  .cover { height: 100vh; display: flex; flex-direction: column; justify-content: space-between;
+    padding: 70px 60px; color: white; position: relative; overflow: hidden;
+    background: linear-gradient(150deg, #1a1040 0%, #2d1b6e 45%, #0d1a3e 100%); }
+  .cover::before { content:''; position:absolute; top:-120px; right:-100px; width:420px; height:420px;
+    border-radius:50%; background:radial-gradient(circle,rgba(108,99,255,.55),transparent 70%); }
+  .cover::after { content:''; position:absolute; bottom:-140px; left:-80px; width:380px; height:380px;
+    border-radius:50%; background:radial-gradient(circle,rgba(0,212,255,.30),transparent 70%); }
+  .cover-top { position: relative; z-index: 2; }
+  .brand { display: flex; align-items: center; gap: 14px; }
+  .brand-logo { width: 52px; height: 52px; border-radius: 14px; display:flex; align-items:center;
+    justify-content:center; background: linear-gradient(135deg,#6C63FF,#00D4FF);
+    box-shadow: 0 8px 24px rgba(108,99,255,.5); }
+  .brand-logo svg { width: 30px; height: 30px; }
+  .brand-name { font-family:'Space Grotesk'; font-weight:700; font-size:24px; letter-spacing:.5px; }
+  .brand-sub { font-size: 12px; color: #b8bce0; letter-spacing: 2px; text-transform: uppercase; }
+  .cover-mid { position: relative; z-index: 2; }
+  .cover-tag { display:inline-block; padding:7px 16px; border:1px solid rgba(255,255,255,.3);
+    border-radius:30px; font-size:12px; letter-spacing:2px; text-transform:uppercase; color:#c4c8f0; margin-bottom:26px; }
+  .cover h1 { font-size: 46px; font-weight: 700; margin: 0 0 18px; line-height:1.1;
+    background: linear-gradient(120deg,#fff 30%,#a78bfa); -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent; }
+  .cover-desc { font-size: 17px; color: #c8ccf0; max-width: 560px; font-weight: 300; }
+  .cover-bottom { position: relative; z-index: 2; display:flex; gap:40px; flex-wrap:wrap;
+    border-top:1px solid rgba(255,255,255,.15); padding-top:26px; }
+  .meta-item .meta-label { font-size:11px; text-transform:uppercase; letter-spacing:1.5px; color:#9094c0; margin-bottom:4px; }
+  .meta-item .meta-value { font-size:15px; font-weight:600; color:#fff; }
+
+  /* ===== CONTENU ===== */
+  .content { padding: 0 60px; }
+  h1.section-num, h2 { color: var(--primary-dark); }
+  h2 { font-size: 23px; font-weight: 700; margin: 0 0 18px; padding: 16px 0 12px;
+    border-bottom: 2px solid var(--accent); position: relative; }
+  h2::before { content:''; position:absolute; left:0; bottom:-2px; width:60px; height:2px; background:#00D4FF; }
+  h3 { font-size: 17px; font-weight: 600; color: var(--ink); margin: 28px 0 10px;
+    padding-left: 14px; border-left: 4px solid var(--accent); }
+  h4 { font-size: 14.5px; font-weight: 600; color: #3a3f5c; margin: 18px 0 8px; }
+  p { margin: 10px 0; }
+
+  table { border-collapse: collapse; width: 100%; margin: 16px 0; font-size: 12.5px;
+    box-shadow: 0 1px 3px rgba(0,0,0,.06); border-radius: 8px; overflow: hidden; }
+  th, td { padding: 9px 13px; text-align: left; border-bottom: 1px solid var(--line); }
+  th { background: linear-gradient(135deg, var(--accent), #7c73ff); color: white;
+    font-weight: 600; font-size: 12px; letter-spacing: .3px; }
+  tr:nth-child(even) td { background: var(--soft); }
+  tr:last-child td { border-bottom: none; }
+
+  code { background: #eceaf9; padding: 2px 7px; border-radius: 5px; font-size: 12px;
+    font-family: 'SF Mono', Monaco, Consolas, monospace; color: var(--primary-dark); }
+  pre { background: #181a2e; color: #e2e8f0; padding: 16px 20px; border-radius: 10px;
+    overflow-x: auto; font-size: 12.5px; box-shadow: 0 4px 14px rgba(24,26,46,.25); }
   pre code { background: none; color: #e2e8f0; padding: 0; }
-  blockquote { border-left: 4px solid #6C63FF; margin: 16px 0; padding: 8px 20px;
-    background: #f5f5fb; color: #475569; }
-  a { color: #5B52E0; }
-  hr { border: none; border-top: 1px solid #e2e8f0; margin: 32px 0; }
-  .mermaid { background: #fafaff; border: 1px solid #e0e0f0; border-radius: 10px;
-    padding: 20px; margin: 20px 0; text-align: center; }
+
+  blockquote { border-left: 4px solid var(--accent); margin: 16px 0; padding: 12px 20px;
+    background: var(--soft); border-radius: 0 8px 8px 0; color: #475069; }
+  blockquote p { margin: 4px 0; }
+  a { color: var(--primary); text-decoration: none; }
+  hr { border: none; border-top: 1px solid var(--line); margin: 30px 0; }
+  ul, ol { padding-left: 22px; }
+  li { margin: 5px 0; }
+  strong { color: #2a2e48; }
+
+  .mermaid { background: #fff; border: 1px solid var(--line); border-radius: 12px;
+    padding: 24px; margin: 22px 0; text-align: center; box-shadow: 0 2px 10px rgba(80,80,140,.07); }
   .mermaid svg { max-width: 100%; height: auto; }
-  .print-btn { position: fixed; top: 20px; right: 20px; background: #6C63FF; color: white;
+
+  .print-btn { position: fixed; top: 20px; right: 20px; background: var(--accent); color: white;
     border: none; padding: 12px 24px; border-radius: 10px; font-size: 14px; font-weight: 600;
-    cursor: pointer; box-shadow: 0 4px 14px rgba(108,99,255,0.4); z-index: 999; }
+    cursor: pointer; box-shadow: 0 4px 14px rgba(108,99,255,.45); z-index: 999; }
+
   @media print {
     .print-btn { display: none; }
-    body { padding: 0; max-width: 100%; font-size: 11.5px; }
-    h1, h2, h3, h4 { page-break-after: avoid; }
-    table, pre, blockquote, .mermaid { page-break-inside: avoid; }
+    @page { margin: 16mm 0; size: A4; }
+    @page :first { margin: 0; }
+    body { font-size: 11px; }
+    .cover { height: 297mm; page-break-after: always; }
+    .content { padding: 0 18mm; }
+    h2 { page-break-after: avoid; padding-top: 6px; }
+    h3, h4 { page-break-after: avoid; }
+    table, pre, blockquote, .mermaid, li { page-break-inside: avoid; }
+    .diagram-section { page-break-inside: avoid; }
   }
 </style>
 </head>
 <body>
 <button class="print-btn" onclick="window.print()">Imprimer / Enregistrer en PDF</button>
-<div id="content"></div>
-<script id="md" type="text/markdown"># Jalon 4 — Dossier de Conception de l'Application & Architecture
 
-**Projet :** OptiFleet — Plateforme de gestion de flotte automobile
-**Auteur :** Kahil Mokhtari
-**Formation :** CDA — Concepteur Développeur d'Applications
-**Échéance :** 30/04/2026
-**Dépôt Git :** https://github.com/Hakkai19z/optifleet-app-
+<!-- PAGE DE GARDE -->
+<section class="cover">
+  <div class="cover-top">
+    <div class="brand">
+      <div class="brand-logo">
+        <svg fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z"/>
+          <path stroke-linecap="round" stroke-linejoin="round" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10l1 1h1m8-1V7a1 1 0 011-1h2l3 4v5l-1 1h-1m-6 0h6"/>
+        </svg>
+      </div>
+      <div>
+        <div class="brand-name">OptiFleet</div>
+        <div class="brand-sub">Fleet Management Platform</div>
+      </div>
+    </div>
+  </div>
+  <div class="cover-mid">
+    <span class="cover-tag">Jalon 4 &middot; Avril 2026</span>
+    <h1>Dossier de Conception<br>& Architecture</h1>
+    <p class="cover-desc">Diagrammes UML, modèle du domaine et architecture multi-couches de la plateforme de gestion de flotte automobile.</p>
+  </div>
+  <div class="cover-bottom">
+    <div class="meta-item"><div class="meta-label">Auteur</div><div class="meta-value">Kahil Mokhtari</div></div>
+    <div class="meta-item"><div class="meta-label">Formation</div><div class="meta-value">CDA</div></div>
+    <div class="meta-item"><div class="meta-label">Échéance</div><div class="meta-value">30/04/2026</div></div>
+    <div class="meta-item"><div class="meta-label">Dépôt</div><div class="meta-value">github.com/Hakkai19z/optifleet-app-</div></div>
+  </div>
+</section>
 
----
+<div class="content"><div id="content"></div></div>
 
-## Table des matières
-
-1. [Introduction](#1-introduction)
-2. [Diagrammes de cas d'utilisation (Use Case UML)](#2-diagrammes-de-cas-dutilisation-use-case-uml)
-3. [Diagrammes de séquence](#3-diagrammes-de-séquence)
-4. [Diagramme de classes](#4-diagramme-de-classes)
-5. [Architecture multi-couches (Chapitre VIII)](#5-architecture-multi-couches-chapitre-viii)
-6. [Composants externes et bibliothèques](#6-composants-externes-et-bibliothèques)
-7. [Schémas complémentaires](#7-schémas-complémentaires)
-
----
-
-## 1. Introduction
+<script id="md" type="text/markdown">## 1. Introduction
 
 Ce dossier présente la **conception technique** d'OptiFleet : les diagrammes UML qui modélisent les interactions, la logique d'exécution et la structure interne de l'application, ainsi que la description de l'architecture multi-couches.
 
@@ -569,16 +640,25 @@ Ces plans ont directement guidé le développement : les entités, services et c
   document.getElementById('content').innerHTML =
     marked.parse(document.getElementById('md').textContent);
 
-  // Post-traitement : transformer les blocs mermaid en divs rendables
   document.querySelectorAll('pre > code.language-mermaid').forEach(function(code) {
     const div = document.createElement('div');
     div.className = 'mermaid';
     div.textContent = code.textContent;
     code.parentElement.replaceWith(div);
   });
+  // Regrouper titre + diagramme pour éviter les coupures
+  document.querySelectorAll('.mermaid').forEach(function(m){
+    const wrap = document.createElement('div'); wrap.className='diagram-section';
+    let prev = m.previousElementSibling;
+    m.parentNode.insertBefore(wrap, prev && /H3|H4|P/.test(prev.tagName)? prev : m);
+    if (prev && /H3|H4|P/.test(prev.tagName)) wrap.appendChild(prev);
+    wrap.appendChild(m);
+  });
 
-  mermaid.initialize({ startOnLoad: false, theme: 'default', securityLevel: 'loose',
-    flowchart: { useMaxWidth: true }, sequence: { useMaxWidth: true } });
+  mermaid.initialize({ startOnLoad:false, theme:'base', securityLevel:'loose',
+    themeVariables: { primaryColor:'#eef0ff', primaryBorderColor:'#6C63FF',
+      primaryTextColor:'#1e2235', lineColor:'#8b8fc0', fontFamily:'Inter' },
+    flowchart:{ useMaxWidth:true }, sequence:{ useMaxWidth:true } });
   mermaid.run({ querySelector: '.mermaid' });
 </script>
 </body>
