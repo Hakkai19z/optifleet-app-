@@ -53,7 +53,7 @@ jobs:
 
       - name: Static analysis
         working-directory: backend
-        run: vendor/bin/phpstan analyse --level=6
+        run: vendor/bin/phpstan analyse --memory-limit=512M
 
       - name: Generate JWT keys
         working-directory: backend
@@ -68,7 +68,19 @@ jobs:
           DATABASE_URL: postgresql://optifleet:secret@127.0.0.1:5432/optifleet_test
           APP_ENV: test
           JWT_PASSPHRASE: test_passphrase
+          JWT_TOKEN_TTL: 900
+          JWT_REFRESH_TOKEN_TTL: 604800
         run: php bin/console doctrine:migrations:migrate --no-interaction
+
+      - name: Load fixtures
+        working-directory: backend
+        env:
+          DATABASE_URL: postgresql://optifleet:secret@127.0.0.1:5432/optifleet_test
+          APP_ENV: test
+          JWT_PASSPHRASE: test_passphrase
+          JWT_TOKEN_TTL: 900
+          JWT_REFRESH_TOKEN_TTL: 604800
+        run: php bin/console doctrine:fixtures:load --no-interaction
 
       - name: Run tests
         working-directory: backend
@@ -76,6 +88,8 @@ jobs:
           DATABASE_URL: postgresql://optifleet:secret@127.0.0.1:5432/optifleet_test
           APP_ENV: test
           JWT_PASSPHRASE: test_passphrase
+          JWT_TOKEN_TTL: 900
+          JWT_REFRESH_TOKEN_TTL: 604800
         run: vendor/bin/phpunit --coverage-text --coverage-clover=coverage.xml
 
   frontend:

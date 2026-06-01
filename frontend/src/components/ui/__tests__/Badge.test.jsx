@@ -25,11 +25,11 @@ describe('Badge', () => {
 
   it('applies correct CSS class for disponible', () => {
     const { container } = render(<Badge variant="disponible" />)
-    expect(container.firstChild).toHaveClass('bg-teal-100')
+    expect(container.firstChild).toHaveClass('text-emerald-400')
   })
 
   it('applies correct CSS class for alerte', () => {
     const { container } = render(<Badge variant="alerte" />)
-    expect(container.firstChild).toHaveClass('bg-red-100')
+    expect(container.firstChild).toHaveClass('text-red-400')
   })
 })
