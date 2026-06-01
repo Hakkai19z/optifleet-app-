@@ -72,6 +72,11 @@ class Vehicule
     #[Groups(['vehicule:read', 'vehicule:write'])]
     private int $kilometrage = 0;
 
+    #[ORM\Column(type: 'integer', nullable: true)]
+    #[Assert\Positive]
+    #[Groups(['vehicule:read', 'vehicule:write'])]
+    private ?int $quotaKmAnnuel = null;
+
     #[ORM\Column(length: 20)]
     #[Assert\Choice(choices: ['disponible', 'en_mission', 'maintenance', 'inactif'])]
     #[Groups(['vehicule:read', 'vehicule:write'])]
@@ -140,6 +145,22 @@ class Vehicule
     public function setAnnee(int $annee): static { $this->annee = $annee; return $this; }
     public function getKilometrage(): int { return $this->kilometrage; }
     public function setKilometrage(int $kilometrage): static { $this->kilometrage = $kilometrage; return $this; }
+    public function getQuotaKmAnnuel(): ?int { return $this->quotaKmAnnuel; }
+    public function setQuotaKmAnnuel(?int $quotaKmAnnuel): static { $this->quotaKmAnnuel = $quotaKmAnnuel; return $this; }
+
+    public function getPourcentageQuota(): ?float
+    {
+        if ($this->quotaKmAnnuel === null || $this->quotaKmAnnuel === 0) {
+            return null;
+        }
+        return round(($this->kilometrage / $this->quotaKmAnnuel) * 100, 1);
+    }
+
+    public function isQuotaDepasse(): bool
+    {
+        return $this->quotaKmAnnuel !== null && $this->kilometrage >= $this->quotaKmAnnuel;
+    }
+
     public function getStatut(): string { return $this->statut; }
     public function setStatut(string $statut): static { $this->statut = $statut; return $this; }
     public function getCategorie(): ?Categorie { return $this->categorie; }
