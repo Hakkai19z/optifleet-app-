@@ -1,0 +1,62 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.prod
+    container_name: optifleet_app_prod
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      APP_ENV: prod
+      APP_SECRET: ${APP_SECRET}
+      JWT_SECRET_KEY: /app/config/jwt/private.pem
+      JWT_PUBLIC_KEY: /app/config/jwt/public.pem
+      JWT_PASSPHRASE: ${JWT_PASSPHRASE}
+      GOOGLE_MAPS_API_KEY: ${GOOGLE_MAPS_API_KEY}
+      MAILER_DSN: ${MAILER_DSN}
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - optifleet_network
+
+  db:
+    image: postgres:16-alpine
+    container_name: optifleet_db_prod
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - pgdata_prod:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - optifleet_network
+
+  front:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.prod
+    container_name: optifleet_front_prod
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - app
+    networks:
+      - optifleet_network
+
+volumes:
+  pgdata_prod:
+
+networks:
+  optifleet_network:
+    driver: bridge
