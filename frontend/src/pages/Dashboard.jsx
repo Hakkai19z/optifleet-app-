@@ -6,6 +6,7 @@ import { TopBar } from '../components/layout/TopBar'
 import { SkeletonCard } from '../components/ui/Skeleton'
 import { dashboardService } from '../services/dashboardService'
 import { useAuth } from '../hooks/useAuth'
+import api from '../services/api'
 
 const STATUT_CONFIG = {
   disponible: { color: '#10B981', label: 'Disponible' },
@@ -48,10 +49,17 @@ const mockAreaData = [
 export default function Dashboard() {
   const [stats, setStats] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [quotaData, setQuotaData] = useState([])
   const { user, hasRole } = useAuth()
 
   useEffect(() => {
     dashboardService.getStats().then(setStats).finally(() => setIsLoading(false))
+  }, [])
+
+  useEffect(() => {
+    if (hasRole('GESTIONNAIRE')) {
+      api.get('/dashboard/vehicules-quota').then(r => setQuotaData(r.data)).catch(() => {})
+    }
   }, [])
 
   const pieData = stats ? Object.entries(stats.vehicules.parStatut).map(([name, value]) => ({
@@ -193,6 +201,61 @@ export default function Dashboard() {
                   <span style={{ color: item.color }}>{item.label}</span>
                 </Link>
               ))}
+            </div>
+          </div>
+        )}
+
+        {/* Quotas kilométriques — GESTIONNAIRE+ */}
+        {hasRole('GESTIONNAIRE') && !isLoading && quotaData.filter(v => v.pourcentage >= 80).length > 0 && (
+          <div className="glass-card p-6">
+            <div className="flex items-center justify-between mb-5">
+              <div>
+                <h3 className="font-display font-semibold text-white">Quotas kilométriques</h3>
+                <p className="text-xs text-slate-500 mt-0.5">Véhicules approchant ou dépassant leur quota annuel</p>
+              </div>
+              <span className="text-xs font-semibold px-3 py-1.5 rounded-full"
+                style={{ background: 'rgba(245,158,11,0.15)', color: '#FBBF24', border: '1px solid rgba(245,158,11,0.3)' }}>
+                {quotaData.filter(v => v.pourcentage >= 80).length} en alerte
+              </span>
+            </div>
+            <div className="space-y-4">
+              {quotaData.filter(v => v.pourcentage >= 80).slice(0, 6).map(v => {
+                const pct = Math.min(v.pourcentage, 100)
+                const isOver = v.depasse
+                const barColor = isOver
+                  ? 'linear-gradient(90deg, #EF4444, #DC2626)'
+                  : pct >= 90
+                  ? 'linear-gradient(90deg, #F97316, #EA580C)'
+                  : 'linear-gradient(90deg, #F59E0B, #D97706)'
+                const statusColor = isOver ? '#F87171' : pct >= 90 ? '#FB923C' : '#FBBF24'
+                return (
+                  <div key={v.id} className="flex items-center gap-4 p-3 rounded-xl border border-white/5 hover:bg-white/3 transition-colors">
+                    <div className="w-24 flex-shrink-0">
+                      <p className="text-xs font-mono font-bold text-white">{v.immatriculation}</p>
+                      <p className="text-xs text-slate-500 truncate">{v.marque} {v.modele}</p>
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex justify-between text-xs mb-1.5">
+                        <span className="text-slate-500">{v.kilometrage.toLocaleString('fr-FR')} / {v.quotaKmAnnuel.toLocaleString('fr-FR')} km</span>
+                        <span className="font-bold" style={{ color: statusColor }}>
+                          {isOver ? '⚠ Dépassé' : `${v.pourcentage.toFixed(0)}%`}
+                        </span>
+                      </div>
+                      <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.05)' }}>
+                        <div className="h-full rounded-full transition-all duration-700"
+                          style={{ width: `${pct}%`, background: barColor }} />
+                      </div>
+                    </div>
+                    <Link to={`/vehicules/${v.id}`}
+                      className="text-xs px-2 py-1 rounded-lg flex-shrink-0 transition-colors"
+                      style={{ color: '#A78BFA', background: 'rgba(108,99,255,0.1)' }}
+                      onMouseEnter={e => e.currentTarget.style.background = 'rgba(108,99,255,0.2)'}
+                      onMouseLeave={e => e.currentTarget.style.background = 'rgba(108,99,255,0.1)'}>
+                      Voir →
+                    </Link>
+                  </div>
+                )
+              })}
             </div>
           </div>
         )}

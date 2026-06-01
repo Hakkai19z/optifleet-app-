@@ -37,13 +37,7 @@ export default function VehiculeDetail() {
     }
   }
 
-  if (isLoading) {
-    return (
-      <Layout>
-        <div className="p-4 md:p-8 text-slate-500 text-sm">Chargement...</div>
-      </Layout>
-    )
-  }
+  if (isLoading) return <Layout><div className="p-4 md:p-8 text-slate-500 text-sm">Chargement...</div></Layout>
   if (!vehicule) return null
 
   const pct = vehicule.quotaKmAnnuel
@@ -58,22 +52,17 @@ export default function VehiculeDetail() {
         actions={
           hasRole('GESTIONNAIRE') && (
             <div className="flex gap-2">
-              <Button variant="secondary" onClick={() => navigate(`/vehicules/${id}/modifier`)}>
-                Modifier
-              </Button>
-              {hasRole('ADMIN') && (
-                <Button variant="danger" onClick={handleDelete}>Supprimer</Button>
-              )}
+              <Button variant="secondary" onClick={() => navigate(`/vehicules/${id}/modifier`)}>Modifier</Button>
+              {hasRole('ADMIN') && <Button variant="danger" onClick={handleDelete}>Supprimer</Button>}
             </div>
           )
         }
       />
 
       <div className="p-4 md:p-8 space-y-6 animate-slide-up">
-        <Button variant="ghost" onClick={() => navigate('/vehicules')} className="mb-2">← Retour</Button>
+        <Button variant="ghost" onClick={() => navigate('/vehicules')}>← Retour</Button>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Main info */}
           <div className="lg:col-span-2 space-y-6">
             {/* Hero card */}
             <div className="relative overflow-hidden rounded-2xl p-6"
@@ -101,24 +90,25 @@ export default function VehiculeDetail() {
                     )}
                   </div>
                   <h2 className="font-display text-2xl font-bold text-white">
-                    {vehicule.marque} {vehicule.modele} <span className="text-slate-500 font-normal text-lg">({vehicule.annee})</span>
+                    {vehicule.marque} {vehicule.modele}
+                    <span className="text-slate-500 font-normal text-lg ml-2">({vehicule.annee})</span>
                   </h2>
                   <p className="font-mono text-lg font-bold text-gradient mt-0.5">{vehicule.immatriculation}</p>
                 </div>
               </div>
             </div>
 
-            {/* Info grid */}
+            {/* Infos + Quota */}
             <Card>
               <h3 className="font-display font-semibold text-white mb-4">Informations générales</h3>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
                 {[
                   { label: 'Marque', value: vehicule.marque },
                   { label: 'Modèle', value: vehicule.modele },
                   { label: 'Année', value: vehicule.annee },
                   { label: 'Catégorie', value: vehicule.categorie?.libelle || '—' },
                   { label: 'Statut', value: <Badge variant={vehicule.statut} /> },
-                  { label: 'Ajouté le', value: vehicule.createdAt ? new Date(vehicule.createdAt).toLocaleDateString('fr-FR') : '—' },
+                  { label: 'Mis à jour', value: vehicule.updatedAt ? new Date(vehicule.updatedAt).toLocaleDateString('fr-FR') : '—' },
                 ].map(({ label, value }) => (
                   <div key={label} className="p-3 rounded-xl bg-white/3 border border-white/5">
                     <p className="text-xs text-slate-500 mb-1">{label}</p>
@@ -127,52 +117,49 @@ export default function VehiculeDetail() {
                 ))}
               </div>
 
-              {/* Km Quota section */}
-              <div className="border-t border-white/5 pt-4">
-                <h4 className="text-sm font-semibold text-white mb-3">Kilométrage & Quota</h4>
-                <div className="grid grid-cols-2 gap-4 mb-3">
-                  <div className="p-3 rounded-xl bg-white/3 border border-white/5">
+              <div className="border-t border-white/5 pt-5">
+                <h4 className="text-sm font-semibold text-white mb-4 flex items-center gap-2">
+                  <svg className="w-4 h-4 text-violet-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                  </svg>
+                  Kilométrage & Quota annuel
+                </h4>
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div className="p-4 rounded-xl bg-white/3 border border-white/5">
                     <p className="text-xs text-slate-500 mb-1">Kilométrage actuel</p>
-                    <p className="text-xl font-display font-bold text-white">
-                      {vehicule.kilometrage.toLocaleString('fr-FR')} <span className="text-sm text-slate-400 font-normal">km</span>
+                    <p className="text-2xl font-display font-bold text-white">
+                      {vehicule.kilometrage.toLocaleString('fr-FR')}
+                      <span className="text-sm text-slate-400 font-normal ml-1">km</span>
                     </p>
                   </div>
-                  <div className="p-3 rounded-xl bg-white/3 border border-white/5">
+                  <div className="p-4 rounded-xl bg-white/3 border border-white/5">
                     <p className="text-xs text-slate-500 mb-1">Quota annuel</p>
                     {vehicule.quotaKmAnnuel ? (
-                      <p className="text-xl font-display font-bold text-white">
-                        {vehicule.quotaKmAnnuel.toLocaleString('fr-FR')} <span className="text-sm text-slate-400 font-normal">km</span>
+                      <p className="text-2xl font-display font-bold text-white">
+                        {vehicule.quotaKmAnnuel.toLocaleString('fr-FR')}
+                        <span className="text-sm text-slate-400 font-normal ml-1">km</span>
                       </p>
                     ) : (
-                      <p className="text-sm text-slate-500">Non défini</p>
+                      <p className="text-sm text-slate-500 mt-1">Non défini</p>
                     )}
                   </div>
                 </div>
-                <KmQuotaBar
-                  kilometrage={vehicule.kilometrage}
-                  quotaKmAnnuel={vehicule.quotaKmAnnuel}
-                />
+                <KmQuotaBar kilometrage={vehicule.kilometrage} quotaKmAnnuel={vehicule.quotaKmAnnuel} />
               </div>
             </Card>
           </div>
 
-          {/* Right column — Map */}
-          <div className="space-y-6">
+          {/* Carte GPS */}
+          <div>
             <Card>
-              <h3 className="font-display font-semibold text-white mb-4">
-                <span className="flex items-center gap-2">
-                  <svg className="w-4 h-4 text-violet-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                  Localisation
-                </span>
+              <h3 className="font-display font-semibold text-white mb-4 flex items-center gap-2">
+                <svg className="w-4 h-4 text-violet-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                Localisation GPS
               </h3>
-              <MapWidget
-                latitude={vehicule.latitude}
-                longitude={vehicule.longitude}
-                adresse={vehicule.adresse}
-              />
+              <MapWidget latitude={vehicule.latitude} longitude={vehicule.longitude} adresse={vehicule.adresse} />
             </Card>
           </div>
         </div>
