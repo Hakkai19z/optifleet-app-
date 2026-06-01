@@ -1,55 +1,29 @@
 import React from 'react'
 import { useToastStore } from '../../store/toastStore'
 
-const icons = {
-  success: (
-    <svg className="w-5 h-5 text-teal-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-    </svg>
-  ),
-  error: (
-    <svg className="w-5 h-5 text-danger" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-    </svg>
-  ),
-  warning: (
-    <svg className="w-5 h-5 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-    </svg>
-  ),
-}
-
 function ToastItem({ toast }) {
   const { removeToast } = useToastStore()
-
+  const styles = {
+    success: { border: 'border-emerald-500/30', icon: '✓', iconBg: 'bg-emerald-500/20 text-emerald-400' },
+    error: { border: 'border-red-500/30', icon: '✕', iconBg: 'bg-red-500/20 text-red-400' },
+    warning: { border: 'border-amber-500/30', icon: '!', iconBg: 'bg-amber-500/20 text-amber-400' },
+  }
+  const s = styles[toast.type] || styles.success
   return (
-    <div
-      className={`flex items-center gap-3 bg-white border rounded-xl shadow-lg px-4 py-3 min-w-72 animate-fade-in ${
-        toast.type === 'error' ? 'border-red-200' : toast.type === 'warning' ? 'border-amber-200' : 'border-teal-200'
-      }`}
-    >
-      {icons[toast.type]}
-      <p className="text-sm text-dark flex-1">{toast.message}</p>
-      <button
-        onClick={() => removeToast(toast.id)}
-        className="text-gray-400 hover:text-dark transition-colors"
-      >
-        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-        </svg>
-      </button>
+    <div className={`flex items-center gap-3 px-4 py-3 rounded-2xl border ${s.border} shadow-2xl min-w-72 animate-slide-up`}
+      style={{ background: 'rgba(17,24,39,0.95)', backdropFilter: 'blur(20px)' }}>
+      <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${s.iconBg}`}>{s.icon}</div>
+      <p className="text-sm text-slate-200 flex-1">{toast.message}</p>
+      <button onClick={() => removeToast(toast.id)} className="text-slate-500 hover:text-white text-lg leading-none">×</button>
     </div>
   )
 }
 
 export function ToastContainer() {
   const { toasts } = useToastStore()
-
   return (
-    <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2">
-      {toasts.map((toast) => (
-        <ToastItem key={toast.id} toast={toast} />
-      ))}
+    <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-2">
+      {toasts.map((t) => <ToastItem key={t.id} toast={t} />)}
     </div>
   )
 }

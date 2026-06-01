@@ -1,40 +1,25 @@
 import React from 'react'
 
-const variantStyles = {
-  disponible: 'bg-teal-100 text-teal-800 border border-teal-200',
-  en_mission: 'bg-blue-100 text-blue-800 border border-blue-200',
-  maintenance: 'bg-amber-100 text-amber-800 border border-amber-200',
-  inactif: 'bg-gray-100 text-gray-600 border border-gray-200',
-  alerte: 'bg-red-100 text-red-800 border border-red-200',
-  en_attente: 'bg-amber-100 text-amber-800 border border-amber-200',
-  en_cours: 'bg-blue-100 text-blue-800 border border-blue-200',
-  resolue: 'bg-teal-100 text-teal-800 border border-teal-200',
-  ADMIN: 'bg-purple-100 text-purple-800 border border-purple-200',
-  GESTIONNAIRE: 'bg-blue-100 text-blue-800 border border-blue-200',
-  CONDUCTEUR: 'bg-gray-100 text-gray-700 border border-gray-200',
-}
-
-const labels = {
-  disponible: 'Disponible',
-  en_mission: 'En mission',
-  maintenance: 'Maintenance',
-  inactif: 'Inactif',
-  alerte: 'Alerte',
-  en_attente: 'En attente',
-  en_cours: 'En cours',
-  resolue: 'Résolue',
-  ADMIN: 'Administrateur',
-  GESTIONNAIRE: 'Gestionnaire',
-  CONDUCTEUR: 'Conducteur',
+const variants = {
+  disponible: { bg: 'bg-emerald-500/15', text: 'text-emerald-400', dot: 'bg-emerald-400', label: 'Disponible' },
+  en_mission: { bg: 'bg-blue-500/15', text: 'text-blue-400', dot: 'bg-blue-400', label: 'En mission' },
+  maintenance: { bg: 'bg-amber-500/15', text: 'text-amber-400', dot: 'bg-amber-400', label: 'Maintenance' },
+  inactif: { bg: 'bg-slate-500/15', text: 'text-slate-400', dot: 'bg-slate-400', label: 'Inactif' },
+  alerte: { bg: 'bg-red-500/15', text: 'text-red-400', dot: 'bg-red-400', label: 'Alerte' },
+  en_attente: { bg: 'bg-amber-500/15', text: 'text-amber-400', dot: 'bg-amber-400', label: 'En attente' },
+  en_cours: { bg: 'bg-blue-500/15', text: 'text-blue-400', dot: 'bg-blue-400', label: 'En cours' },
+  resolue: { bg: 'bg-emerald-500/15', text: 'text-emerald-400', dot: 'bg-emerald-400', label: 'Résolue' },
+  ADMIN: { bg: 'bg-violet-500/15', text: 'text-violet-400', dot: 'bg-violet-400', label: 'Administrateur' },
+  GESTIONNAIRE: { bg: 'bg-cyan-500/15', text: 'text-cyan-400', dot: 'bg-cyan-400', label: 'Gestionnaire' },
+  CONDUCTEUR: { bg: 'bg-slate-500/15', text: 'text-slate-400', dot: 'bg-slate-400', label: 'Conducteur' },
 }
 
 export function Badge({ variant, label, className = '' }) {
-  const style = variantStyles[variant] || 'bg-gray-100 text-gray-600 border border-gray-200'
-  const displayLabel = label || labels[variant] || variant
-
+  const v = variants[variant] || { bg: 'bg-slate-500/15', text: 'text-slate-400', dot: 'bg-slate-400', label: variant }
   return (
-    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${style} ${className}`}>
-      {displayLabel}
+    <span className={`badge ${v.bg} ${v.text} ${className}`}>
+      <span className={`w-1.5 h-1.5 rounded-full ${v.dot} animate-pulse`} />
+      {label || v.label}
     </span>
   )
 }
