@@ -86,7 +86,7 @@ export default function EntretiensList() {
           <Button variant="primary" onClick={() => setShowModal(true)}>+ Ajouter un entretien</Button>
         )}
       />
-      <div className="p-8">
+      <div className="p-4 md:p-8">
         <Card className="p-0">
           {isLoading ? <SkeletonTable /> : (
             <Table columns={columns} data={entretiens} emptyMessage="Aucun entretien enregistré" />

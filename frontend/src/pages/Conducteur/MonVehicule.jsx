@@ -24,7 +24,7 @@ export default function MonVehicule() {
     return (
       <Layout>
         <TopBar title="Mon véhicule" />
-        <div className="p-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="p-4 md:p-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
           {[...Array(4)].map((_, i) => <SkeletonCard key={i} />)}
         </div>
       </Layout>
@@ -35,7 +35,7 @@ export default function MonVehicule() {
     return (
       <Layout>
         <TopBar title="Mon véhicule" />
-        <div className="p-8 flex flex-col items-center justify-center min-h-64">
+        <div className="p-4 md:p-8 flex flex-col items-center justify-center min-h-64">
           <div className="glass-card p-12 text-center max-w-md">
             <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4"
               style={{ background: 'rgba(108,99,255,0.15)' }}>
@@ -58,9 +58,9 @@ export default function MonVehicule() {
     <Layout>
       <TopBar title="Mon véhicule" subtitle="Informations et historique de votre véhicule affecté" />
 
-      <div className="p-8 space-y-6 animate-slide-up">
+      <div className="p-4 md:p-8 space-y-6 animate-slide-up">
         {/* Hero car card */}
-        <div className="relative overflow-hidden rounded-2xl p-8"
+        <div className="relative overflow-hidden rounded-2xl p-4 md:p-8"
           style={{ background: 'linear-gradient(135deg, #0F1628 0%, #1a1040 60%, #0d1a2e 100%)', border: '1px solid rgba(108,99,255,0.2)' }}>
           <div className="absolute top-0 right-0 w-80 h-80 rounded-full blur-3xl opacity-20"
             style={{ background: 'radial-gradient(circle, #6C63FF, transparent)' }} />

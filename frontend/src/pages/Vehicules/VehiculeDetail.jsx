@@ -37,7 +37,7 @@ export default function VehiculeDetail() {
 
   if (isLoading) return (
     <Layout>
-      <div className="p-8 text-slate-500">Chargement...</div>
+      <div className="p-4 md:p-8 text-slate-500">Chargement...</div>
     </Layout>
   )
   if (!vehicule) return null
@@ -61,7 +61,7 @@ export default function VehiculeDetail() {
           </div>
         }
       />
-      <div className="p-8 space-y-6 animate-slide-up">
+      <div className="p-4 md:p-8 space-y-6 animate-slide-up">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <Card className="lg:col-span-2">
             <h3 className="font-display text-base font-semibold text-white mb-4">Informations générales</h3>

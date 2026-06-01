@@ -69,7 +69,7 @@ export default function Dashboard() {
         subtitle="Voici l'état de votre flotte en temps réel"
       />
 
-      <div className="p-8 space-y-8 animate-slide-up">
+      <div className="p-4 md:p-8 space-y-8 animate-slide-up">
         {/* KPI Cards */}
         {isLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">

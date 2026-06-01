@@ -91,7 +91,7 @@ export default function VehiculeForm() {
         title={isEdit ? 'Modifier le véhicule' : 'Nouveau véhicule'}
         actions={<Button variant="ghost" onClick={() => navigate(-1)}>← Retour</Button>}
       />
-      <div className="p-8 max-w-2xl animate-slide-up">
+      <div className="p-4 md:p-8 max-w-2xl animate-slide-up">
         <Card>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">

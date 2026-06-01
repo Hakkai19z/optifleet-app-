@@ -61,7 +61,7 @@ export default function VehiculesList() {
           </Button>
         )}
       />
-      <div className="p-8">
+      <div className="p-4 md:p-8">
         <div className="flex items-center gap-2 mb-6">
           {Object.entries(FILTER_LABELS).map(([statut, label]) => (
             <button

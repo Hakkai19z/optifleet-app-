@@ -64,7 +64,7 @@ export default function CategoriesList() {
         subtitle="Catégories de véhicules"
         actions={<Button variant="primary" onClick={() => setShowModal(true)}>+ Nouvelle catégorie</Button>}
       />
-      <div className="p-8">
+      <div className="p-4 md:p-8">
         <Card className="p-0">
           <Table columns={columns} data={categories} emptyMessage="Aucune catégorie" />
         </Card>

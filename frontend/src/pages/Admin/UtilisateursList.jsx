@@ -74,7 +74,7 @@ export default function UtilisateursList() {
         subtitle="Gestion des comptes"
         actions={<Button variant="primary" onClick={() => setShowModal(true)}>+ Nouvel utilisateur</Button>}
       />
-      <div className="p-8">
+      <div className="p-4 md:p-8">
         <Card className="p-0">
           {isLoading ? <SkeletonTable /> : (
             <Table columns={columns} data={users} emptyMessage="Aucun utilisateur" />

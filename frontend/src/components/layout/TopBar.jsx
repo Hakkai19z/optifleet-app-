@@ -2,7 +2,7 @@ import React from 'react'
 
 export function TopBar({ title, subtitle, actions }) {
   return (
-    <header className="px-8 py-5 border-b border-white/5 flex items-center justify-between"
+    <header className="px-4 md:px-8 py-4 md:py-5 border-b border-white/5 flex items-center justify-between"
       style={{ background: 'rgba(11,15,26,0.8)', backdropFilter: 'blur(20px)' }}>
       <div>
         <h1 className="font-display text-xl font-bold text-white">{title}</h1>

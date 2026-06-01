@@ -7,7 +7,7 @@ export default function AdminDashboard() {
   return (
     <Layout>
       <TopBar title="Administration" subtitle="Gestion des utilisateurs et catégories" />
-      <div className="p-8 grid grid-cols-1 md:grid-cols-2 gap-6 animate-slide-up">
+      <div className="p-4 md:p-8 grid grid-cols-1 md:grid-cols-2 gap-6 animate-slide-up">
         <Link to="/admin/utilisateurs">
           <div className="glass-card-hover p-6 cursor-pointer group">
             <div className="flex items-center gap-4">

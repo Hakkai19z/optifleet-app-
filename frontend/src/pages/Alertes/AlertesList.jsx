@@ -68,7 +68,7 @@ export default function AlertesList() {
   return (
     <Layout>
       <TopBar title="Alertes" subtitle="Suivi des alertes et échéances" />
-      <div className="p-8">
+      <div className="p-4 md:p-8">
         <div className="flex gap-2 mb-6">
           {FILTERS.map(([val, label]) => (
             <button
