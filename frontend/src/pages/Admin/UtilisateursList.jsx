@@ -52,24 +52,31 @@ export default function UtilisateursList() {
   }
 
   const columns = [
-    { key: 'nom', label: 'Nom', render: (row) => `${row.prenom} ${row.nom}` },
-    { key: 'email', label: 'Email' },
+    { key: 'nom', label: 'Nom', render: (row) => (
+      <span className="font-medium text-white">{row.prenom} {row.nom}</span>
+    )},
+    { key: 'email', label: 'Email', render: (row) => (
+      <span className="text-slate-400">{row.email}</span>
+    )},
     { key: 'role', label: 'Rôle', render: (row) => <Badge variant={row.role} /> },
-    { key: 'createdAt', label: 'Créé le', render: (row) => row.createdAt ? new Date(row.createdAt).toLocaleDateString('fr-FR') : '—' },
+    { key: 'createdAt', label: 'Créé le', render: (row) => (
+      <span className="text-slate-500">{row.createdAt ? new Date(row.createdAt).toLocaleDateString('fr-FR') : '—'}</span>
+    )},
     { key: 'actions', label: '', render: (row) => (
-      <Button variant="danger" size="sm" onClick={() => handleDelete(row.id)}>Supprimer</Button>
+      <Button variant="danger" onClick={() => handleDelete(row.id)}>Supprimer</Button>
     )},
   ]
 
   return (
     <Layout>
-      <TopBar title="Utilisateurs" subtitle="Gestion des comptes" />
+      <TopBar
+        title="Utilisateurs"
+        subtitle="Gestion des comptes"
+        actions={<Button variant="primary" onClick={() => setShowModal(true)}>+ Nouvel utilisateur</Button>}
+      />
       <div className="p-8">
-        <div className="flex justify-end mb-6">
-          <Button variant="primary" onClick={() => setShowModal(true)}>+ Nouvel utilisateur</Button>
-        </div>
         <Card className="p-0">
-          {isLoading ? <div className="p-6"><SkeletonTable /></div> : (
+          {isLoading ? <SkeletonTable /> : (
             <Table columns={columns} data={users} emptyMessage="Aucun utilisateur" />
           )}
         </Card>

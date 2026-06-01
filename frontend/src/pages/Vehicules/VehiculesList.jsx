@@ -10,6 +10,14 @@ import { SkeletonTable } from '../../components/ui/Skeleton'
 import { useVehicules } from '../../hooks/useVehicules'
 import { useAuth } from '../../hooks/useAuth'
 
+const FILTER_LABELS = {
+  '': 'Tous',
+  disponible: 'Disponibles',
+  en_mission: 'En mission',
+  maintenance: 'Maintenance',
+  inactif: 'Inactifs',
+}
+
 export default function VehiculesList() {
   const navigate = useNavigate()
   const { hasRole } = useAuth()
@@ -18,25 +26,25 @@ export default function VehiculesList() {
 
   const columns = [
     { key: 'immatriculation', label: 'Immatriculation', render: (row) => (
-      <span className="font-mono font-semibold text-dark">{row.immatriculation}</span>
+      <span className="font-mono font-bold text-violet-400">{row.immatriculation}</span>
     )},
     { key: 'marque', label: 'Véhicule', render: (row) => (
       <div>
-        <p className="font-medium text-dark">{row.marque} {row.modele}</p>
-        <p className="text-xs text-gray-500">{row.annee}</p>
+        <p className="font-medium text-white">{row.marque} {row.modele}</p>
+        <p className="text-xs text-slate-500">{row.annee}</p>
       </div>
     )},
     { key: 'kilometrage', label: 'Kilométrage', render: (row) => (
-      <span>{row.kilometrage.toLocaleString('fr-FR')} km</span>
+      <span className="text-slate-300">{row.kilometrage.toLocaleString('fr-FR')} km</span>
     )},
     { key: 'categorie', label: 'Catégorie', render: (row) => (
-      <span>{row.categorie?.libelle || '—'}</span>
+      <span className="text-slate-400">{row.categorie?.libelle || '—'}</span>
     )},
     { key: 'statut', label: 'Statut', render: (row) => (
       <Badge variant={row.statut} />
     )},
     { key: 'actions', label: '', render: (row) => (
-      <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); navigate(`/vehicules/${row.id}`) }}>
+      <Button variant="ghost" onClick={(e) => { e.stopPropagation(); navigate(`/vehicules/${row.id}`) }}>
         Détails →
       </Button>
     )},
@@ -44,34 +52,39 @@ export default function VehiculesList() {
 
   return (
     <Layout>
-      <TopBar title="Véhicules" subtitle={`${total} véhicule${total > 1 ? 's' : ''} dans la flotte`} />
+      <TopBar
+        title="Flotte"
+        subtitle={`${total} véhicule${total > 1 ? 's' : ''} dans la flotte`}
+        actions={hasRole('GESTIONNAIRE') && (
+          <Button variant="primary" onClick={() => navigate('/vehicules/nouveau')}>
+            + Nouveau véhicule
+          </Button>
+        )}
+      />
       <div className="p-8">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex gap-3">
-            {['', 'disponible', 'en_mission', 'maintenance', 'inactif'].map((statut) => (
-              <button
-                key={statut}
-                onClick={() => setFilters(statut ? { statut } : {})}
-                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                  filters.statut === statut || (!filters.statut && !statut)
-                    ? 'bg-primary text-white'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                }`}
-              >
-                {statut === '' ? 'Tous' : statut === 'disponible' ? 'Disponibles' : statut === 'en_mission' ? 'En mission' : statut === 'maintenance' ? 'Maintenance' : 'Inactifs'}
-              </button>
-            ))}
-          </div>
-          {hasRole('GESTIONNAIRE') && (
-            <Button variant="primary" onClick={() => navigate('/vehicules/nouveau')}>
-              + Nouveau véhicule
-            </Button>
-          )}
+        <div className="flex items-center gap-2 mb-6">
+          {Object.entries(FILTER_LABELS).map(([statut, label]) => (
+            <button
+              key={statut}
+              onClick={() => setFilters(statut ? { statut } : {})}
+              className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
+                (filters.statut === statut) || (!filters.statut && !statut)
+                  ? 'text-white'
+                  : 'text-slate-400 border border-white/5 hover:text-white hover:border-violet-500/30'
+              }`}
+              style={(filters.statut === statut) || (!filters.statut && !statut) ? {
+                background: 'linear-gradient(135deg, #6C63FF, #8B5CF6)',
+                boxShadow: '0 4px 15px rgba(108,99,255,0.3)',
+              } : {}}
+            >
+              {label}
+            </button>
+          ))}
         </div>
 
         <Card className="p-0">
           {isLoading ? (
-            <div className="p-6"><SkeletonTable /></div>
+            <SkeletonTable />
           ) : (
             <Table
               columns={columns}

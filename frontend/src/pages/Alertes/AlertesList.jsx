@@ -40,46 +40,56 @@ export default function AlertesList() {
 
   const columns = [
     { key: 'vehicule', label: 'Véhicule', render: (row) => (
-      <span className="font-mono font-semibold">{row.vehicule?.immatriculation || '—'}</span>
+      <span className="font-mono font-bold text-violet-400">{row.vehicule?.immatriculation || '—'}</span>
     )},
-    { key: 'type', label: 'Type', render: (row) => TYPE_LABELS[row.type] || row.type },
+    { key: 'type', label: 'Type', render: (row) => (
+      <span className="text-slate-300">{TYPE_LABELS[row.type] || row.type}</span>
+    )},
     { key: 'message', label: 'Message', render: (row) => (
-      <span className="text-sm text-gray-600 max-w-xs truncate block">{row.message}</span>
+      <span className="text-sm text-slate-400 max-w-xs truncate block">{row.message}</span>
     )},
     { key: 'dateEcheance', label: 'Échéance', render: (row) => (
-      <span className={new Date(row.dateEcheance) < new Date() ? 'text-danger font-medium' : ''}>
+      <span className={new Date(row.dateEcheance) < new Date() ? 'text-red-400 font-medium' : 'text-slate-400'}>
         {new Date(row.dateEcheance).toLocaleDateString('fr-FR')}
       </span>
     )},
     { key: 'statut', label: 'Statut', render: (row) => <Badge variant={row.statut} /> },
     ...(hasRole('GESTIONNAIRE') ? [{
       key: 'actions', label: '', render: (row) => row.statut !== 'resolue' ? (
-        <Button variant="ghost" size="sm" onClick={() => handleStatutChange(row.id, 'resolue')}>
+        <Button variant="ghost" onClick={() => handleStatutChange(row.id, 'resolue')}>
           Résoudre
         </Button>
       ) : null
     }] : []),
   ]
 
+  const FILTERS = [['', 'Toutes'], ['en_attente', 'En attente'], ['en_cours', 'En cours'], ['resolue', 'Résolues']]
+
   return (
     <Layout>
       <TopBar title="Alertes" subtitle="Suivi des alertes et échéances" />
       <div className="p-8">
-        <div className="flex gap-3 mb-6">
-          {[['', 'Toutes'], ['en_attente', 'En attente'], ['en_cours', 'En cours'], ['resolue', 'Résolues']].map(([val, label]) => (
+        <div className="flex gap-2 mb-6">
+          {FILTERS.map(([val, label]) => (
             <button
               key={val}
               onClick={() => setFilter(val)}
-              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                filter === val ? 'bg-primary text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
+                filter === val
+                  ? 'text-white'
+                  : 'text-slate-400 border border-white/5 hover:text-white hover:border-violet-500/30'
               }`}
+              style={filter === val ? {
+                background: 'linear-gradient(135deg, #6C63FF, #8B5CF6)',
+                boxShadow: '0 4px 15px rgba(108,99,255,0.3)',
+              } : {}}
             >
               {label}
             </button>
           ))}
         </div>
         <Card className="p-0">
-          {isLoading ? <div className="p-6"><SkeletonTable /></div> : (
+          {isLoading ? <SkeletonTable /> : (
             <Table columns={columns} data={alertes} emptyMessage="Aucune alerte" />
           )}
         </Card>

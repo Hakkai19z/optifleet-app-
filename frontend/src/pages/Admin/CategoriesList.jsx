@@ -46,20 +46,25 @@ export default function CategoriesList() {
   }
 
   const columns = [
-    { key: 'libelle', label: 'Libellé', render: (row) => <span className="font-medium">{row.libelle}</span> },
-    { key: 'description', label: 'Description', render: (row) => row.description || '—' },
+    { key: 'libelle', label: 'Libellé', render: (row) => (
+      <span className="font-medium text-white">{row.libelle}</span>
+    )},
+    { key: 'description', label: 'Description', render: (row) => (
+      <span className="text-slate-400">{row.description || '—'}</span>
+    )},
     { key: 'actions', label: '', render: (row) => (
-      <Button variant="danger" size="sm" onClick={() => handleDelete(row.id)}>Supprimer</Button>
+      <Button variant="danger" onClick={() => handleDelete(row.id)}>Supprimer</Button>
     )},
   ]
 
   return (
     <Layout>
-      <TopBar title="Catégories" subtitle="Catégories de véhicules" />
+      <TopBar
+        title="Catégories"
+        subtitle="Catégories de véhicules"
+        actions={<Button variant="primary" onClick={() => setShowModal(true)}>+ Nouvelle catégorie</Button>}
+      />
       <div className="p-8">
-        <div className="flex justify-end mb-6">
-          <Button variant="primary" onClick={() => setShowModal(true)}>+ Nouvelle catégorie</Button>
-        </div>
         <Card className="p-0">
           <Table columns={columns} data={categories} emptyMessage="Aucune catégorie" />
         </Card>

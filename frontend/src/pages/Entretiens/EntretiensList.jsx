@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { Layout } from '../../components/layout/Layout'
 import { TopBar } from '../../components/layout/TopBar'
 import { Card } from '../../components/ui/Card'
@@ -60,29 +59,36 @@ export default function EntretiensList() {
 
   const columns = [
     { key: 'vehicule', label: 'Véhicule', render: (row) => (
-      <span className="font-mono text-sm">{row.vehicule?.immatriculation || '—'}</span>
+      <span className="font-mono font-bold text-violet-400">{row.vehicule?.immatriculation || '—'}</span>
     )},
-    { key: 'type', label: 'Type', render: (row) => TYPE_LABELS[row.type] || row.type },
-    { key: 'dateRealise', label: 'Réalisé le', render: (row) => new Date(row.dateRealise).toLocaleDateString('fr-FR') },
+    { key: 'type', label: 'Type', render: (row) => (
+      <span className="text-slate-300">{TYPE_LABELS[row.type] || row.type}</span>
+    )},
+    { key: 'dateRealise', label: 'Réalisé le', render: (row) => (
+      <span className="text-slate-400">{new Date(row.dateRealise).toLocaleDateString('fr-FR')}</span>
+    )},
     { key: 'dateProchaine', label: 'Prochain', render: (row) => row.dateProchaine ? (
-      <span className={new Date(row.dateProchaine) < new Date() ? 'text-danger font-medium' : ''}>
+      <span className={new Date(row.dateProchaine) < new Date() ? 'text-red-400 font-medium' : 'text-slate-400'}>
         {new Date(row.dateProchaine).toLocaleDateString('fr-FR')}
       </span>
-    ) : '—' },
-    { key: 'cout', label: 'Coût', render: (row) => row.cout ? `${parseFloat(row.cout).toLocaleString('fr-FR')} €` : '—' },
+    ) : <span className="text-slate-600">—</span> },
+    { key: 'cout', label: 'Coût', render: (row) => row.cout ? (
+      <span className="text-emerald-400 font-medium">{parseFloat(row.cout).toLocaleString('fr-FR')} €</span>
+    ) : <span className="text-slate-600">—</span> },
   ]
 
   return (
     <Layout>
-      <TopBar title="Entretiens" subtitle="Historique et planification" />
+      <TopBar
+        title="Entretiens"
+        subtitle="Historique et planification"
+        actions={hasRole('GESTIONNAIRE') && (
+          <Button variant="primary" onClick={() => setShowModal(true)}>+ Ajouter un entretien</Button>
+        )}
+      />
       <div className="p-8">
-        <div className="flex justify-end mb-6">
-          {hasRole('GESTIONNAIRE') && (
-            <Button variant="primary" onClick={() => setShowModal(true)}>+ Ajouter un entretien</Button>
-          )}
-        </div>
         <Card className="p-0">
-          {isLoading ? <div className="p-6"><SkeletonTable /></div> : (
+          {isLoading ? <SkeletonTable /> : (
             <Table columns={columns} data={entretiens} emptyMessage="Aucun entretien enregistré" />
           )}
         </Card>

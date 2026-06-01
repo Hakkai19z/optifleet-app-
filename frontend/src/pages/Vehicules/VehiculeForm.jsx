@@ -87,14 +87,27 @@ export default function VehiculeForm() {
 
   return (
     <Layout>
-      <TopBar title={isEdit ? 'Modifier le véhicule' : 'Nouveau véhicule'} />
-      <div className="p-8 max-w-2xl">
-        <Button variant="ghost" onClick={() => navigate(-1)} className="mb-6">← Retour</Button>
+      <TopBar
+        title={isEdit ? 'Modifier le véhicule' : 'Nouveau véhicule'}
+        actions={<Button variant="ghost" onClick={() => navigate(-1)}>← Retour</Button>}
+      />
+      <div className="p-8 max-w-2xl animate-slide-up">
         <Card>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
-              <Input label="Immatriculation" value={form.immatriculation} onChange={(e) => setForm({ ...form, immatriculation: e.target.value.toUpperCase() })} error={errors.immatriculation} placeholder="AB-123-CD" required />
-              <Select label="Statut" value={form.statut} onChange={(e) => setForm({ ...form, statut: e.target.value })}>
+              <Input
+                label="Immatriculation"
+                value={form.immatriculation}
+                onChange={(e) => setForm({ ...form, immatriculation: e.target.value.toUpperCase() })}
+                error={errors.immatriculation}
+                placeholder="AB-123-CD"
+                required
+              />
+              <Select
+                label="Statut"
+                value={form.statut}
+                onChange={(e) => setForm({ ...form, statut: e.target.value })}
+              >
                 {['disponible', 'en_mission', 'maintenance', 'inactif'].map((s) => (
                   <option key={s} value={s}>{s.replace('_', ' ')}</option>
                 ))}
@@ -109,7 +122,7 @@ export default function VehiculeForm() {
                   <option key={c.id} value={`/api/categories/${c.id}`}>{c.libelle}</option>
                 ))}
               </Select>
-              <Input label="Adresse" value={form.adresse} onChange={(e) => setForm({ ...form, adresse: e.target.value })} placeholder="123 rue de la Paix, Paris" className="col-span-1" />
+              <Input label="Adresse" value={form.adresse} onChange={(e) => setForm({ ...form, adresse: e.target.value })} placeholder="123 rue de la Paix, Paris" />
             </div>
             <div className="flex gap-3 pt-2">
               <Button type="submit" variant="primary" disabled={isLoading}>
