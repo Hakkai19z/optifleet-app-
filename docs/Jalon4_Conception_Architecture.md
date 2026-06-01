@@ -1,0 +1,520 @@
+# Jalon 4 — Dossier de Conception de l'Application & Architecture
+
+**Projet :** OptiFleet — Plateforme de gestion de flotte automobile
+**Auteur :** Kahil Mokhtari
+**Formation :** CDA — Concepteur Développeur d'Applications
+**Échéance :** 30/04/2026
+**Dépôt Git :** https://github.com/Hakkai19z/optifleet-app-
+
+---
+
+## Table des matières
+
+1. [Introduction](#1-introduction)
+2. [Diagrammes de cas d'utilisation (Use Case UML)](#2-diagrammes-de-cas-dutilisation-use-case-uml)
+3. [Diagrammes de séquence](#3-diagrammes-de-séquence)
+4. [Diagramme de classes](#4-diagramme-de-classes)
+5. [Architecture multi-couches (Chapitre VIII)](#5-architecture-multi-couches-chapitre-viii)
+6. [Composants externes et bibliothèques](#6-composants-externes-et-bibliothèques)
+7. [Schémas complémentaires](#7-schémas-complémentaires)
+
+---
+
+## 1. Introduction
+
+Ce dossier présente la **conception technique** d'OptiFleet : les diagrammes UML qui modélisent les interactions, la logique d'exécution et la structure interne de l'application, ainsi que la description de l'architecture multi-couches.
+
+OptiFleet est une application de **gestion de flotte automobile** permettant à une organisation de :
+- gérer un parc de véhicules (caractéristiques, statut, localisation GPS, quota kilométrique) ;
+- **affecter les véhicules aux conducteurs** (cœur métier) ;
+- suivre les entretiens et générer des alertes automatiques ;
+- offrir à chaque conducteur une vue dédiée à son véhicule.
+
+L'application repose sur une architecture **API REST Symfony 7 + SPA React 18**, conformément au socle technique imposé.
+
+---
+
+## 2. Diagrammes de cas d'utilisation (Use Case UML)
+
+### 2.1 Acteurs du système
+
+Le système distingue trois acteurs, organisés en **hiérarchie de rôles** (un rôle supérieur hérite des droits des rôles inférieurs) :
+
+| Acteur | Description | Hérite de |
+|--------|-------------|-----------|
+| **Conducteur** | Utilise un véhicule affecté | — |
+| **Gestionnaire** | Gère la flotte et les affectations | Conducteur |
+| **Administrateur** | Gère les utilisateurs et le système | Gestionnaire |
+
+### 2.2 Diagramme de cas d'utilisation global
+
+```mermaid
+flowchart LR
+    Cond(["👤 Conducteur"])
+    Gest(["👤 Gestionnaire"])
+    Admin(["👤 Administrateur"])
+
+    subgraph SYS [Système OptiFleet]
+        UC1(["S'authentifier (JWT)"])
+        UC2(["Consulter mon véhicule"])
+        UC3(["Consulter mon quota km"])
+        UC4(["Voir la localisation GPS"])
+        UC5(["Signaler un problème"])
+        UC6(["Supprimer mon compte (RGPD)"])
+        UC7(["Gérer les véhicules (CRUD)"])
+        UC8(["Affecter un véhicule"])
+        UC9(["Libérer un véhicule"])
+        UC10(["Consulter la vue flotte"])
+        UC11(["Gérer les entretiens"])
+        UC12(["Gérer les alertes"])
+        UC13(["Consulter le tableau de bord"])
+        UC14(["Gérer les utilisateurs"])
+        UC15(["Gérer les catégories"])
+    end
+
+    Cond --- UC1
+    Cond --- UC2
+    Cond --- UC3
+    Cond --- UC4
+    Cond --- UC5
+    Cond --- UC6
+
+    Gest --- UC7
+    Gest --- UC8
+    Gest --- UC9
+    Gest --- UC10
+    Gest --- UC11
+    Gest --- UC12
+    Gest --- UC13
+
+    Admin --- UC14
+    Admin --- UC15
+```
+
+> **Note sur l'héritage des acteurs :** le Gestionnaire bénéficie de tous les cas d'utilisation du Conducteur, et l'Administrateur de tous ceux du Gestionnaire (relation de généralisation entre acteurs). Pour la lisibilité, seuls les cas **spécifiques** à chaque rôle sont reliés sur le schéma.
+
+### 2.3 Description détaillée des cas d'utilisation principaux
+
+| Cas d'utilisation | Acteur | Description | Endpoint API |
+|-------------------|--------|-------------|--------------|
+| S'authentifier | Tous | Connexion par email/mot de passe, obtention d'un jeton JWT | `POST /api/auth/login` |
+| Consulter mon véhicule | Conducteur | Affiche le véhicule affecté, son quota, sa position, son historique | `GET /api/conducteur/mon-vehicule` |
+| Signaler un problème | Conducteur | Crée une alerte destinée au gestionnaire | `POST /api/conducteur/signaler-probleme` |
+| Affecter un véhicule | Gestionnaire | Attribue un véhicule disponible à un conducteur | `POST /api/gestionnaire/affecter` |
+| Libérer un véhicule | Gestionnaire | Clôture une affectation, repasse le véhicule en disponible | `DELETE /api/gestionnaire/desaffecter/{id}` |
+| Consulter la vue flotte | Gestionnaire | Vue temps réel : qui conduit quoi, statuts, quotas | `GET /api/gestionnaire/vue-flotte` |
+| Gérer les véhicules | Gestionnaire | CRUD complet sur les véhicules | `/api/vehicules` (API Platform) |
+| Gérer les utilisateurs | Administrateur | CRUD sur les comptes | `/api/utilisateurs` (API Platform) |
+
+---
+
+## 3. Diagrammes de séquence
+
+### 3.1 Authentification d'un utilisateur (login JWT)
+
+Ce scénario illustre la sécurisation de la connexion (protection brute force + vérification du mot de passe haché + génération du jeton).
+
+```mermaid
+sequenceDiagram
+    actor U as Utilisateur
+    participant F as SPA React
+    participant AC as AuthController
+    participant RL as RateLimiter
+    participant UR as UtilisateurRepository
+    participant PH as PasswordHasher
+    participant JWT as JWTTokenManager
+
+    U->>F: Saisit email + mot de passe
+    F->>AC: POST /api/auth/login
+    AC->>RL: consume(IP)
+    alt Trop de tentatives (> 5 / 15 min)
+        RL-->>AC: refusé
+        AC-->>F: 429 Too Many Requests
+    else Autorisé
+        RL-->>AC: accepté
+        AC->>UR: findOneBy(email)
+        UR-->>AC: Utilisateur | null
+        AC->>PH: isPasswordValid(user, motDePasse)
+        alt Identifiants invalides
+            PH-->>AC: false
+            AC-->>F: 401 Unauthorized
+        else Identifiants valides
+            PH-->>AC: true
+            AC->>RL: reset()
+            AC->>JWT: create(user)
+            JWT-->>AC: token JWT (RS256)
+            AC-->>F: 200 { token }
+            F->>F: Stocke le token (localStorage)
+        end
+    end
+```
+
+### 3.2 Affectation d'un véhicule à un conducteur
+
+Scénario métier central : le gestionnaire affecte un véhicule. Le système clôture automatiquement l'ancienne affectation et synchronise les statuts.
+
+```mermaid
+sequenceDiagram
+    actor G as Gestionnaire
+    participant F as SPA React
+    participant GC as GestionnaireController
+    participant AR as AffectationRepository
+    participant EM as EntityManager
+    participant DB as PostgreSQL
+
+    G->>F: Sélectionne conducteur + véhicule
+    F->>GC: POST /api/gestionnaire/affecter
+    GC->>EM: find(Utilisateur), find(Vehicule)
+    EM->>DB: SELECT ...
+    DB-->>EM: entités
+    EM-->>GC: conducteur, véhicule
+
+    GC->>AR: rechercher affectation active du conducteur
+    AR->>DB: SELECT WHERE dateFin IS NULL
+    DB-->>AR: affectation | null
+    alt Ancienne affectation existante
+        GC->>GC: setDateFin(now) sur l'ancienne
+        GC->>GC: ancien véhicule -> "disponible"
+    end
+
+    GC->>GC: crée new Affectation(conducteur, véhicule)
+    GC->>GC: véhicule -> statut "en_mission"
+    GC->>EM: persist(affectation) + flush()
+    EM->>DB: INSERT + UPDATE (transaction)
+    DB-->>EM: OK
+    EM-->>GC: succès
+    GC-->>F: 201 { message, affectationId }
+    F->>G: Notification "Véhicule affecté"
+```
+
+### 3.3 Création d'un véhicule avec géolocalisation automatique (API externe)
+
+Scénario illustrant l'intégration de l'API externe Google Maps via un **listener Doctrine** transparent.
+
+```mermaid
+sequenceDiagram
+    actor G as Gestionnaire
+    participant F as SPA React
+    participant AP as API Platform
+    participant L as VehiculeGeocodingListener
+    participant VS as VehiculeService
+    participant GM as API Google Maps
+    participant DB as PostgreSQL
+
+    G->>F: Saisit un véhicule + adresse
+    F->>AP: POST /api/vehicules
+    AP->>AP: Désérialise + valide (contraintes Assert)
+    AP->>L: événement prePersist
+    alt Adresse présente et pas de coordonnées
+        L->>VS: geocodeAdresse(vehicule)
+        VS->>GM: GET /geocode?address=...&key=***
+        GM-->>VS: { lat, lng }
+        VS->>VS: setLatitude() / setLongitude()
+    end
+    AP->>DB: INSERT vehicule (avec lat/lng)
+    DB-->>AP: OK
+    AP-->>F: 201 { vehicule + coordonnées }
+    F->>G: Affiche la fiche + carte GPS
+```
+
+---
+
+## 4. Diagramme de classes
+
+### 4.1 Modèle du domaine (Entités / Couche Modèle)
+
+Le diagramme ci-dessous représente les entités métier issues du MCD/MLD (Jalon 3), enrichies de leurs méthodes de logique applicative.
+
+```mermaid
+classDiagram
+    class Utilisateur {
+        -int id
+        -string nom
+        -string prenom
+        -string email
+        -string motDePasse
+        -string role
+        -DateTimeImmutable createdAt
+        +getUserIdentifier() string
+        +getRoles() array
+        +getPassword() string
+    }
+
+    class Vehicule {
+        -int id
+        -string immatriculation
+        -string marque
+        -string modele
+        -int annee
+        -int kilometrage
+        -int quotaKmAnnuel
+        -string statut
+        -string latitude
+        -string longitude
+        -string adresse
+        +getPourcentageQuota() float
+        +isQuotaDepasse() bool
+        +isDisponible() bool
+    }
+
+    class Affectation {
+        -int id
+        -DateTime dateDebut
+        -DateTime dateFin
+        -string commentaire
+        +isActive() bool
+    }
+
+    class Entretien {
+        -int id
+        -string type
+        -DateTime dateRealise
+        -DateTime dateProchaine
+        -int kmProchaine
+        -decimal cout
+        -string notes
+        +isEchu() bool
+    }
+
+    class Alerte {
+        -int id
+        -string type
+        -string message
+        -DateTime dateEcheance
+        -string statut
+    }
+
+    class Categorie {
+        -int id
+        -string libelle
+        -string description
+    }
+
+    Utilisateur "1" --> "0..*" Affectation : conduit
+    Vehicule "1" --> "0..*" Affectation : est affecté
+    Categorie "1" --> "0..*" Vehicule : classe
+    Vehicule "1" --> "0..*" Entretien : subit
+    Vehicule "1" --> "0..*" Alerte : déclenche
+```
+
+### 4.2 Lecture des relations et cardinalités
+
+| Relation | Type | Cardinalité | Signification |
+|----------|------|-------------|---------------|
+| Utilisateur → Affectation | Association (1-N) | 1 conducteur, N affectations | Un conducteur peut avoir plusieurs affectations dans le temps (historique) |
+| Vehicule → Affectation | Association (1-N) | 1 véhicule, N affectations | Un véhicule passe par plusieurs conducteurs au fil du temps |
+| Categorie → Vehicule | Association (1-N) | 1 catégorie, N véhicules | Une catégorie (Berline, SUV…) regroupe plusieurs véhicules |
+| Vehicule → Entretien | Composition (1-N) | 1 véhicule, N entretiens | Les entretiens n'existent pas sans véhicule |
+| Vehicule → Alerte | Composition (1-N) | 1 véhicule, N alertes | Les alertes sont rattachées à un véhicule |
+
+> **À propos d'`Affectation` :** cette entité est une **classe d'association** entre `Utilisateur` (conducteur) et `Vehicule`. Elle porte des attributs propres (`dateDebut`, `dateFin`, `commentaire`) et une logique métier (`isActive()` : une affectation est active si `dateFin` est nulle ou future). Elle matérialise le cœur du domaine : « qui conduit quel véhicule, et depuis quand ».
+
+### 4.3 Couche applicative (Services) et organisation en packages
+
+```mermaid
+classDiagram
+    direction LR
+
+    class VehiculeService {
+        +creerVehicule(Vehicule) Vehicule
+        +validerImmatriculation(string) bool
+        +isDisponible(Vehicule) bool
+        +geocodeAdresse(Vehicule) void
+        +getStatsByStatut() array
+    }
+
+    class AlerteService {
+        +creerAlerte(Vehicule, type, message, date) Alerte
+        +verifierEcheances() int
+        +countActiveAlertes() int
+    }
+
+    class EntretienService {
+        +planifier(Vehicule, type, dates, cout) Entretien
+        +isEchu(Entretien) bool
+        +getCoutTotalByPeriod(debut, fin) float
+    }
+
+    class VehiculeGeocodingListener {
+        +prePersist(Vehicule) void
+        +preUpdate(Vehicule) void
+    }
+
+    VehiculeService ..> Vehicule : manipule
+    AlerteService ..> Alerte : crée
+    EntretienService ..> Entretien : planifie
+    VehiculeGeocodingListener ..> VehiculeService : délègue
+```
+
+Chaque service respecte le principe de **responsabilité unique (SRP)** : `VehiculeService` ne gère que les véhicules, `AlerteService` que les alertes, etc.
+
+---
+
+## 5. Architecture multi-couches (Chapitre VIII)
+
+### 5.1 Pattern MVC (adapté à une API REST)
+
+OptiFleet applique le pattern **MVC** dans sa déclinaison API REST + SPA :
+
+| Couche MVC | Implémentation OptiFleet | Dossier |
+|------------|--------------------------|---------|
+| **Modèle** | Entités Doctrine (`Vehicule`, `Affectation`…) + Repositories | `src/Entity`, `src/Repository` |
+| **Vue** | Réponses JSON (sérialisées par API Platform) + interface React | API JSON / `frontend/src` |
+| **Contrôleur** | Contrôleurs Symfony qui reçoivent les requêtes HTTP | `src/Controller` |
+
+> La logique métier complexe n'est **pas** placée dans les contrôleurs mais déléguée à la **couche Service** (`src/Service`), maintenant les contrôleurs « fins » (thin controllers). Le contrôleur orchestre ; le service décide.
+
+### 5.2 Découpage logique en couches
+
+```mermaid
+flowchart TD
+    subgraph Presentation [Couche Présentation]
+        R[SPA React 18<br/>Composants, Pages, Services axios]
+    end
+    subgraph API [Couche API / Contrôleurs]
+        C[Contrôleurs Symfony<br/>Auth, Gestionnaire, Conducteur, Dashboard]
+        AP[API Platform<br/>endpoints CRUD automatiques]
+    end
+    subgraph Metier [Couche Métier / Services]
+        S[VehiculeService, AlerteService,<br/>EntretienService, Listeners]
+    end
+    subgraph Donnees [Couche Accès aux Données]
+        REPO[Repositories Doctrine]
+        ORM[Doctrine ORM]
+    end
+    subgraph Infra [Infrastructure]
+        DB[(PostgreSQL 16)]
+        EXT[API Google Maps]
+    end
+
+    R -->|HTTP / JSON + JWT| C
+    R -->|HTTP / JSON + JWT| AP
+    C --> S
+    AP --> S
+    S --> REPO
+    REPO --> ORM
+    ORM --> DB
+    S -->|HttpClient| EXT
+```
+
+### 5.3 Architecture n-tiers (déploiement physique)
+
+```mermaid
+flowchart LR
+    subgraph Client [Tier 1 - Client]
+        NAV[Navigateur web]
+    end
+    subgraph Serveur [Tier 2 - Serveur applicatif]
+        direction TB
+        FRONT[Conteneur front<br/>Node + Vite :3000]
+        BACK[Conteneur app<br/>PHP 8.3 + Symfony :8000]
+    end
+    subgraph Data [Tier 3 - Données]
+        PG[(Conteneur db<br/>PostgreSQL 16 :5432)]
+    end
+    EXT[API Google Maps<br/>service externe]
+
+    NAV -->|HTTPS| FRONT
+    NAV -->|HTTPS / API REST| BACK
+    BACK -->|TCP 5432| PG
+    BACK -->|HTTPS| EXT
+```
+
+**Distinction couche logique / tier physique :** l'application suit une architecture **3-tiers logique** (présentation / métier / données). Physiquement, ces couches sont conteneurisées via **Docker Compose** en trois services (`front`, `app`, `db`). En développement, les trois conteneurs tournent sur le même hôte ; en production, ils pourraient être répartis sur plusieurs machines sans changer l'architecture logique.
+
+### 5.4 Séparation des responsabilités & bonnes pratiques
+
+- **SRP (Single Responsibility Principle)** : chaque service a une responsabilité unique (`VehiculeService` ne traite que les véhicules).
+- **Thin controllers** : les contrôleurs orchestrent, la logique réside dans les services.
+- **Injection de dépendances** : tous les services et repositories sont injectés via l'autowiring Symfony (jamais de `new` sur une dépendance).
+- **Configuration isolée** : tous les secrets (clé JWT, clé Google Maps, identifiants BDD) sont externalisés dans des variables d'environnement (`.env`, non versionné).
+- **Routage centralisé** : déclaré par attributs PHP 8 (`#[Route(...)]`) directement sur les méthodes des contrôleurs.
+- **Conventions PSR** : code conforme PSR-12, vérifié automatiquement par php-cs-fixer en CI.
+
+### 5.5 Design patterns mis en œuvre
+
+| Pattern | Où | Rôle |
+|---------|-----|------|
+| **Repository** | `src/Repository` | Encapsule l'accès aux données (requêtes Doctrine) |
+| **Service Layer** | `src/Service` | Centralise la logique métier réutilisable |
+| **Observer / Event Listener** | `VehiculeGeocodingListener` | Réagit aux événements Doctrine (`prePersist`/`preUpdate`) pour géolocaliser sans coupler le contrôleur |
+| **Dependency Injection** | Conteneur Symfony | Découple les composants et facilite les tests |
+| **DTO / Sérialisation** | API Platform (groupes de normalisation) | Contrôle finement les données exposées par l'API |
+
+---
+
+## 6. Composants externes et bibliothèques
+
+### 6.1 Back-end (bundles Symfony)
+
+| Bibliothèque | Rôle dans l'architecture |
+|--------------|--------------------------|
+| **api-platform/core** | Génère automatiquement les endpoints REST CRUD à partir des entités |
+| **doctrine/orm** + **doctrine-bundle** | ORM : mapping objet-relationnel, couche d'accès aux données |
+| **doctrine-migrations-bundle** | Versionnement du schéma de base de données |
+| **lexik/jwt-authentication-bundle** | Authentification par jeton JWT (signature RS256) |
+| **nelmio/cors-bundle** | Gestion des en-têtes CORS (autorisation des appels cross-origin de la SPA) |
+| **symfony/rate-limiter** | Limitation des tentatives de connexion (anti brute force) |
+| **symfony/http-client** | Appels HTTP sortants vers l'API Google Maps |
+| **symfony/mailer** | Envoi d'e-mails (notifications, prévu) |
+
+### 6.2 Front-end (packages npm)
+
+| Bibliothèque | Rôle |
+|--------------|------|
+| **react** + **react-dom** | Bibliothèque d'interface (SPA) |
+| **react-router-dom** | Routage côté client + protection des routes par rôle |
+| **axios** | Client HTTP (appels à l'API, injection automatique du jeton JWT) |
+| **zustand** | Gestion d'état global léger (authentification, notifications) |
+| **recharts** | Graphiques du tableau de bord (KPIs) |
+| **tailwindcss** | Framework CSS utilitaire (design system) |
+
+---
+
+## 7. Schémas complémentaires
+
+### 7.1 Cycle de vie du statut d'un véhicule (machine à états)
+
+Le statut d'un véhicule évolue selon les affectations et la maintenance. Ce diagramme d'états clarifie un workflow central de l'application.
+
+```mermaid
+stateDiagram-v2
+    [*] --> disponible : Création du véhicule
+    disponible --> en_mission : Affectation à un conducteur
+    en_mission --> disponible : Libération / fin d'affectation
+    disponible --> maintenance : Mise en entretien
+    en_mission --> maintenance : Panne signalée
+    maintenance --> disponible : Entretien terminé
+    disponible --> inactif : Retrait du parc
+    inactif --> disponible : Remise en service
+    inactif --> [*] : Suppression
+```
+
+### 7.2 Flux d'authentification et d'autorisation
+
+```mermaid
+flowchart LR
+    A[Requête API] --> B{Jeton JWT présent ?}
+    B -->|Non| C[401 Unauthorized]
+    B -->|Oui| D{Jeton valide ?}
+    D -->|Non| C
+    D -->|Oui| E{Rôle suffisant ?<br/>IsGranted}
+    E -->|Non| F[403 Forbidden]
+    E -->|Oui| G[Exécution de l'action]
+```
+
+---
+
+## Conclusion
+
+Cette conception technique fournit une vision claire et cohérente de l'application :
+- les **cas d'utilisation** couvrent l'ensemble des fonctionnalités du CDCF, organisés par rôle ;
+- les **diagrammes de séquence** détaillent les scénarios critiques (authentification sécurisée, affectation, géolocalisation) ;
+- le **diagramme de classes** reflète fidèlement le modèle du domaine implémenté ;
+- l'**architecture multi-couches** (MVC logique + 3-tiers physique conteneurisé) garantit la séparation des responsabilités et la maintenabilité.
+
+Ces plans ont directement guidé le développement : les entités, services et contrôleurs présentés ici correspondent à l'implémentation réelle du dépôt Git, validant la cohérence entre conception et code.
+
+---
+
+*Document de conception — Jalon 4 — OptiFleet.*
