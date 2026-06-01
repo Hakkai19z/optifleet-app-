@@ -15,7 +15,6 @@ services:
       JWT_SECRET_KEY: /app/config/jwt/private.pem
       JWT_PUBLIC_KEY: /app/config/jwt/public.pem
       JWT_PASSPHRASE: ${JWT_PASSPHRASE:-optifleet_jwt_passphrase}
-      GOOGLE_MAPS_API_KEY: ${GOOGLE_MAPS_API_KEY:-}
       MAILER_DSN: ${MAILER_DSN:-null://null}
     command: ["php", "-S", "0.0.0.0:8000", "-t", "/app/public/", "/app/public/index.php"]
     depends_on:
