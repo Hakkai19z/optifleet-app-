@@ -1,0 +1,109 @@
+name: CI OptiFleet
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  backend:
+    name: Backend Tests
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: optifleet_test
+          POSTGRES_USER: optifleet
+          POSTGRES_PASSWORD: secret
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: pdo, pdo_pgsql, intl, mbstring
+          coverage: xdebug
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: backend/vendor
+          key: ${{ runner.os }}-composer-${{ hashFiles('backend/composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-
+
+      - name: Install dependencies
+        working-directory: backend
+        run: composer install --no-interaction --prefer-dist
+
+      - name: Check code style
+        working-directory: backend
+        run: vendor/bin/php-cs-fixer fix --dry-run --diff
+
+      - name: Static analysis
+        working-directory: backend
+        run: vendor/bin/phpstan analyse --level=6
+
+      - name: Generate JWT keys
+        working-directory: backend
+        run: |
+          mkdir -p config/jwt
+          openssl genrsa -out config/jwt/private.pem -aes256 -passout pass:test_passphrase 4096
+          openssl rsa -pubout -in config/jwt/private.pem -out config/jwt/public.pem -passin pass:test_passphrase
+
+      - name: Run migrations
+        working-directory: backend
+        env:
+          DATABASE_URL: postgresql://optifleet:secret@127.0.0.1:5432/optifleet_test
+          APP_ENV: test
+          JWT_PASSPHRASE: test_passphrase
+        run: php bin/console doctrine:migrations:migrate --no-interaction
+
+      - name: Run tests
+        working-directory: backend
+        env:
+          DATABASE_URL: postgresql://optifleet:secret@127.0.0.1:5432/optifleet_test
+          APP_ENV: test
+          JWT_PASSPHRASE: test_passphrase
+        run: vendor/bin/phpunit --coverage-text --coverage-clover=coverage.xml
+
+  frontend:
+    name: Frontend Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Lint
+        working-directory: frontend
+        run: npm run lint
+
+      - name: Run tests
+        working-directory: frontend
+        run: npm run test -- --coverage
+
+      - name: Build
+        working-directory: frontend
+        run: npm run build
