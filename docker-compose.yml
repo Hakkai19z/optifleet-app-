@@ -17,6 +17,7 @@ services:
       JWT_PASSPHRASE: ${JWT_PASSPHRASE:-optifleet_jwt_passphrase}
       GOOGLE_MAPS_API_KEY: ${GOOGLE_MAPS_API_KEY:-}
       MAILER_DSN: ${MAILER_DSN:-null://null}
+    command: ["php", "-S", "0.0.0.0:8000", "-t", "/app/public/", "/app/public/index.php"]
     depends_on:
       db:
         condition: service_healthy
