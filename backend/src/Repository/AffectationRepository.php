@@ -1,0 +1,39 @@
+<?php
+
+namespace App\Repository;
+
+use App\Entity\Affectation;
+use App\Entity\Vehicule;
+use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\Persistence\ManagerRegistry;
+
+class AffectationRepository extends ServiceEntityRepository
+{
+    public function __construct(ManagerRegistry $registry)
+    {
+        parent::__construct($registry, Affectation::class);
+    }
+
+    public function hasOverlap(Vehicule $vehicule, \DateTimeInterface $dateDebut, ?\DateTimeInterface $dateFin, ?int $excludeId = null): bool
+    {
+        $qb = $this->createQueryBuilder('a')
+            ->where('a.vehicule = :vehicule')
+            ->setParameter('vehicule', $vehicule);
+
+        if ($dateFin !== null) {
+            $qb->andWhere('a.dateDebut < :dateFin AND (a.dateFin IS NULL OR a.dateFin > :dateDebut)')
+               ->setParameter('dateFin', $dateFin)
+               ->setParameter('dateDebut', $dateDebut);
+        } else {
+            $qb->andWhere('a.dateFin IS NULL OR a.dateFin > :dateDebut')
+               ->setParameter('dateDebut', $dateDebut);
+        }
+
+        if ($excludeId !== null) {
+            $qb->andWhere('a.id != :excludeId')
+               ->setParameter('excludeId', $excludeId);
+        }
+
+        return count($qb->getQuery()->getResult()) > 0;
+    }
+}
