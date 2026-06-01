@@ -3,9 +3,12 @@
 namespace App\Controller;
 
 use App\Entity\Affectation;
+use App\Entity\Utilisateur;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
@@ -16,15 +19,13 @@ class ConducteurController extends AbstractController
     #[Route('/mon-vehicule', name: 'conducteur_mon_vehicule', methods: ['GET'])]
     public function monVehicule(EntityManagerInterface $em): JsonResponse
     {
-        /** @var \App\Entity\Utilisateur $user */
+        /** @var Utilisateur $user */
         $user = $this->getUser();
 
         $affectation = $em->getRepository(Affectation::class)
             ->createQueryBuilder('a')
-            ->leftJoin('a.vehicule', 'v')
-            ->addSelect('v')
-            ->leftJoin('v.categorie', 'c')
-            ->addSelect('c')
+            ->leftJoin('a.vehicule', 'v')->addSelect('v')
+            ->leftJoin('v.categorie', 'c')->addSelect('c')
             ->where('a.conducteur = :user')
             ->andWhere('a.dateFin IS NULL OR a.dateFin > :now')
             ->setParameter('user', $user)
@@ -45,7 +46,7 @@ class ConducteurController extends AbstractController
         return $this->json([
             'affectation' => [
                 'id' => $affectation->getId(),
-                'dateDebut' => $affectation->getDateDebut()?->format('Y-m-d H:i'),
+                'dateDebut' => $affectation->getDateDebut()?->format('d/m/Y H:i'),
                 'commentaire' => $affectation->getCommentaire(),
             ],
             'vehicule' => [
@@ -55,8 +56,11 @@ class ConducteurController extends AbstractController
                 'modele' => $vehicule->getModele(),
                 'annee' => $vehicule->getAnnee(),
                 'kilometrage' => $vehicule->getKilometrage(),
+                'quotaKmAnnuel' => $vehicule->getQuotaKmAnnuel(),
                 'statut' => $vehicule->getStatut(),
                 'adresse' => $vehicule->getAdresse(),
+                'latitude' => $vehicule->getLatitude(),
+                'longitude' => $vehicule->getLongitude(),
                 'categorie' => $vehicule->getCategorie()?->getLibelle(),
             ],
             'entretiens' => array_map(fn($e) => [
@@ -68,5 +72,54 @@ class ConducteurController extends AbstractController
                 'notes' => $e->getNotes(),
             ], array_slice($entretiens, 0, 5)),
         ]);
+    }
+
+    #[Route('/signaler-probleme', name: 'conducteur_signaler_probleme', methods: ['POST'])]
+    public function signalerProbleme(Request $request, EntityManagerInterface $em): JsonResponse
+    {
+        /** @var Utilisateur $user */
+        $user = $this->getUser();
+
+        $data = json_decode($request->getContent(), true);
+        $message = trim($data['message'] ?? '');
+
+        if (empty($message)) {
+            return $this->json(['message' => 'Le message est requis'], Response::HTTP_BAD_REQUEST);
+        }
+
+        $affectation = $em->getRepository(Affectation::class)
+            ->createQueryBuilder('a')
+            ->leftJoin('a.vehicule', 'v')->addSelect('v')
+            ->where('a.conducteur = :user')
+            ->andWhere('a.dateFin IS NULL OR a.dateFin > :now')
+            ->setParameter('user', $user)
+            ->setParameter('now', new \DateTime())
+            ->orderBy('a.dateDebut', 'DESC')
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult();
+
+        if (!$affectation) {
+            return $this->json(['message' => 'Aucun véhicule affecté'], Response::HTTP_NOT_FOUND);
+        }
+
+        $vehicule = $affectation->getVehicule();
+
+        $alerte = new \App\Entity\Alerte();
+        $alerte->setVehicule($vehicule);
+        $alerte->setType('autre');
+        $alerte->setMessage(sprintf(
+            '[Signalement conducteur %s %s] %s',
+            $user->getPrenom(),
+            $user->getNom(),
+            $message
+        ));
+        $alerte->setDateEcheance(new \DateTime());
+        $alerte->setStatut('en_attente');
+
+        $em->persist($alerte);
+        $em->flush();
+
+        return $this->json(['message' => 'Problème signalé avec succès', 'id' => $alerte->getId()]);
     }
 }
