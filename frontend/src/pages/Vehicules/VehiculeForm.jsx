@@ -25,6 +25,7 @@ export default function VehiculeForm() {
     modele: '',
     annee: new Date().getFullYear(),
     kilometrage: 0,
+    quotaKmAnnuel: '',
     statut: 'disponible',
     categorie: '',
     adresse: '',
@@ -42,6 +43,7 @@ export default function VehiculeForm() {
           modele: data.modele,
           annee: data.annee,
           kilometrage: data.kilometrage,
+          quotaKmAnnuel: data.quotaKmAnnuel ?? '',
           statut: data.statut,
           categorie: data.categorie?.['@id'] || '',
           adresse: data.adresse || '',
@@ -68,8 +70,14 @@ export default function VehiculeForm() {
     if (!validate()) return
     setIsLoading(true)
     try {
-      const payload = { ...form, annee: parseInt(form.annee), kilometrage: parseInt(form.kilometrage) }
+      const payload = {
+        ...form,
+        annee: parseInt(form.annee),
+        kilometrage: parseInt(form.kilometrage),
+        quotaKmAnnuel: form.quotaKmAnnuel !== '' ? parseInt(form.quotaKmAnnuel) : null,
+      }
       if (!payload.categorie) delete payload.categorie
+      if (payload.quotaKmAnnuel === null) delete payload.quotaKmAnnuel
       if (isEdit) {
         await vehiculeService.update(id, payload)
         addToast('Véhicule modifié avec succès')
@@ -116,6 +124,7 @@ export default function VehiculeForm() {
               <Input label="Modèle" value={form.modele} onChange={(e) => setForm({ ...form, modele: e.target.value })} error={errors.modele} required />
               <Input label="Année" type="number" value={form.annee} onChange={(e) => setForm({ ...form, annee: e.target.value })} error={errors.annee} required />
               <Input label="Kilométrage (km)" type="number" value={form.kilometrage} onChange={(e) => setForm({ ...form, kilometrage: e.target.value })} error={errors.kilometrage} />
+              <Input label="Quota annuel (km)" type="number" value={form.quotaKmAnnuel} onChange={(e) => setForm({ ...form, quotaKmAnnuel: e.target.value })} placeholder="ex: 30000" />
               <Select label="Catégorie" value={form.categorie} onChange={(e) => setForm({ ...form, categorie: e.target.value })}>
                 <option value="">— Sélectionner —</option>
                 {categories.map((c) => (
