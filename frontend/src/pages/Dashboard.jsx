@@ -187,10 +187,11 @@ export default function Dashboard() {
         {hasRole('GESTIONNAIRE') && !isLoading && (
           <div className="glass-card p-6">
             <h3 className="font-display font-semibold text-white mb-4">Accès rapide</h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
               {[
-                { to: '/vehicules/nouveau', label: '+ Nouveau véhicule', color: '#6C63FF' },
-                { to: '/vehicules', label: 'Voir la flotte', color: '#00D4FF' },
+                { to: '/affectations', label: 'Affecter un véhicule', color: '#6C63FF' },
+                { to: '/vue-flotte', label: 'Vue flotte', color: '#A78BFA' },
+                { to: '/vehicules/nouveau', label: '+ Nouveau véhicule', color: '#00D4FF' },
                 { to: '/entretiens', label: 'Entretiens', color: '#10B981' },
                 { to: '/alertes', label: 'Alertes', color: '#F59E0B' },
               ].map((item) => (
