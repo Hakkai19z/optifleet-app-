@@ -3,10 +3,13 @@ import { Layout } from '../../components/layout/Layout'
 import { TopBar } from '../../components/layout/TopBar'
 import { Card } from '../../components/ui/Card'
 import { Badge } from '../../components/ui/Badge'
+import { Button } from '../../components/ui/Button'
+import { Modal } from '../../components/ui/Modal'
 import { SkeletonCard } from '../../components/ui/Skeleton'
 import { KmQuotaBar } from '../../components/ui/KmQuotaBar'
 import { MapWidget } from '../../components/ui/MapWidget'
-import api from '../../services/api'
+import { conducteurService } from '../../services/conducteurService'
+import { useToastStore } from '../../store/toastStore'
 
 const TYPE_LABELS = {
   revision: 'Révision', vidange: 'Vidange', CT: 'Contrôle technique',
@@ -16,12 +19,32 @@ const TYPE_LABELS = {
 export default function MonVehicule() {
   const [data, setData] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [showSignalModal, setShowSignalModal] = useState(false)
+  const [signalMessage, setSignalMessage] = useState('')
+  const [signalLoading, setSignalLoading] = useState(false)
+  const { addToast } = useToastStore()
 
   useEffect(() => {
-    api.get('/conducteur/mon-vehicule')
-      .then(r => setData(r.data))
+    conducteurService.getMonVehicule()
+      .then(setData)
       .finally(() => setIsLoading(false))
   }, [])
+
+  const handleSignaler = async (e) => {
+    e.preventDefault()
+    if (!signalMessage.trim()) return
+    setSignalLoading(true)
+    try {
+      await conducteurService.signalerProbleme(signalMessage)
+      addToast('Problème signalé au gestionnaire')
+      setShowSignalModal(false)
+      setSignalMessage('')
+    } catch {
+      addToast('Erreur lors du signalement', 'error')
+    } finally {
+      setSignalLoading(false)
+    }
+  }
 
   if (isLoading) {
     return (
@@ -59,7 +82,18 @@ export default function MonVehicule() {
 
   return (
     <Layout>
-      <TopBar title="Mon véhicule" subtitle="Informations et historique de votre véhicule affecté" />
+      <TopBar
+        title="Mon véhicule"
+        subtitle="Informations et historique de votre véhicule affecté"
+        actions={
+          <Button variant="secondary" onClick={() => setShowSignalModal(true)}>
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            Signaler un problème
+          </Button>
+        }
+      />
 
       <div className="p-4 md:p-8 space-y-6 animate-slide-up">
         {/* Hero car card */}
@@ -188,6 +222,30 @@ export default function MonVehicule() {
           )}
         </div>
       </div>
+
+      <Modal isOpen={showSignalModal} onClose={() => setShowSignalModal(false)} title="Signaler un problème">
+        <form onSubmit={handleSignaler} className="space-y-4">
+          <p className="text-sm text-slate-400">
+            Décrivez le problème rencontré sur votre véhicule. Votre gestionnaire recevra une alerte.
+          </p>
+          <div>
+            <label className="form-label">Description du problème</label>
+            <textarea
+              value={signalMessage}
+              onChange={(e) => setSignalMessage(e.target.value)}
+              className="form-input min-h-28 resize-none"
+              placeholder="Ex: Voyant moteur allumé, bruit anormal au freinage, pneu crevé..."
+              required
+            />
+          </div>
+          <div className="flex gap-3">
+            <Button type="submit" variant="primary" disabled={signalLoading || !signalMessage.trim()}>
+              {signalLoading ? 'Envoi...' : 'Envoyer le signalement'}
+            </Button>
+            <Button type="button" variant="ghost" onClick={() => setShowSignalModal(false)}>Annuler</Button>
+          </div>
+        </form>
+      </Modal>
     </Layout>
   )
 }
