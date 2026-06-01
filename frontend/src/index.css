@@ -2,62 +2,172 @@
 @tailwind components;
 @tailwind utilities;
 
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap');
+
 @layer base {
-  body {
-    @apply font-sans text-dark bg-gray-50 antialiased;
+  :root {
+    --bg-primary: #0B0F1A;
+    --bg-surface: #111827;
+    --bg-elevated: #1C2437;
+    --color-primary: #6C63FF;
+    --color-accent: #00D4FF;
+    --color-success: #10B981;
+    --color-warning: #F59E0B;
+    --color-danger: #EF4444;
   }
 
-  * {
-    box-sizing: border-box;
+  * { box-sizing: border-box; }
+
+  body {
+    background-color: #0B0F1A;
+    color: #F1F5F9;
+    font-family: 'Inter', sans-serif;
+    -webkit-font-smoothing: antialiased;
   }
+
+  h1, h2, h3, h4 {
+    font-family: 'Space Grotesk', sans-serif;
+  }
+
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: #0B0F1A; }
+  ::-webkit-scrollbar-thumb { background: #2D3748; border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: #6C63FF; }
 }
 
 @layer components {
-  .sidebar-link {
-    @apply flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors duration-150;
+  .glass-card {
+    @apply relative overflow-hidden rounded-2xl border border-white/5;
+    background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%);
   }
 
-  .sidebar-link-active {
-    @apply bg-primary text-white;
+  .glass-card-hover {
+    @apply glass-card transition-all duration-300 hover:border-violet-500/30 hover:shadow-2xl hover:-translate-y-0.5;
+    hover-box-shadow: 0 25px 50px -12px rgba(108, 99, 255, 0.1);
   }
 
-  .sidebar-link-inactive {
-    @apply text-gray-600 hover:bg-gray-100 hover:text-dark;
+  .glow-violet {
+    box-shadow: 0 0 40px rgba(108, 99, 255, 0.3);
   }
 
-  .card {
-    @apply bg-white rounded-xl shadow-sm border border-gray-100 p-6;
+  .glow-cyan {
+    box-shadow: 0 0 40px rgba(0, 212, 255, 0.3);
   }
 
-  .card-accent {
-    @apply bg-white rounded-xl shadow-sm border-l-4 p-6;
-  }
-
-  .form-input {
-    @apply w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors;
-  }
-
-  .form-label {
-    @apply block text-sm font-medium text-gray-700 mb-1.5;
+  .gradient-text {
+    @apply bg-gradient-to-r from-violet-400 to-cyan-400 bg-clip-text text-transparent;
   }
 
   .btn {
-    @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 focus:outline-none disabled:opacity-40 disabled:cursor-not-allowed;
   }
 
   .btn-primary {
-    @apply btn bg-primary text-white hover:bg-primary-600 focus:ring-primary;
+    @apply btn text-white;
+    background: linear-gradient(135deg, #6C63FF 0%, #8B5CF6 100%);
+    box-shadow: 0 4px 20px rgba(108, 99, 255, 0.4);
+  }
+  .btn-primary:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 28px rgba(108, 99, 255, 0.6);
   }
 
   .btn-secondary {
-    @apply btn bg-gray-100 text-dark hover:bg-gray-200 focus:ring-gray-300;
+    @apply btn text-slate-200 border border-white/10;
+    background: rgba(255,255,255,0.08);
+  }
+  .btn-secondary:hover:not(:disabled) {
+    background: rgba(255,255,255,0.12);
+    border-color: rgba(108, 99, 255, 0.5);
   }
 
   .btn-danger {
-    @apply btn bg-danger text-white hover:bg-red-700 focus:ring-danger;
+    @apply btn text-white;
+    background: linear-gradient(135deg, #EF4444, #DC2626);
+    box-shadow: 0 4px 20px rgba(239, 68, 68, 0.3);
   }
 
   .btn-ghost {
-    @apply btn bg-transparent text-gray-600 hover:bg-gray-100 hover:text-dark focus:ring-gray-300;
+    @apply btn text-slate-400;
+  }
+  .btn-ghost:hover:not(:disabled) {
+    color: white;
+    background: rgba(255,255,255,0.08);
+  }
+
+  .form-input {
+    @apply w-full px-4 py-3 rounded-xl border border-white/10 text-white placeholder-slate-500 text-sm;
+    @apply focus:outline-none focus:border-violet-500/60 focus:ring-2 focus:ring-violet-500/20 transition-all;
+    background: rgba(255,255,255,0.05);
+  }
+
+  .form-input option {
+    background: #1C2437;
+    color: #F1F5F9;
+  }
+
+  .form-label {
+    @apply block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2;
+  }
+
+  .sidebar-link {
+    @apply flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 cursor-pointer;
+  }
+  .sidebar-link-active {
+    @apply text-white;
+    background: linear-gradient(135deg, rgba(108,99,255,0.3), rgba(0,212,255,0.1));
+    border-left: 3px solid #6C63FF;
+  }
+  .sidebar-link-inactive {
+    @apply text-slate-400;
+    border-left: 3px solid transparent;
+  }
+  .sidebar-link-inactive:hover {
+    color: white;
+    background: rgba(255,255,255,0.05);
+  }
+
+  .stat-card {
+    @apply glass-card p-6 relative overflow-hidden;
+  }
+
+  .badge {
+    @apply inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold;
+  }
+
+  .table-row {
+    @apply border-b border-white/5 transition-colors;
+  }
+  .table-row:hover {
+    background: rgba(255,255,255,0.03);
+  }
+}
+
+@layer utilities {
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+  }
+
+  .animate-pulse-slow {
+    animation: pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  .text-gradient {
+    background: linear-gradient(135deg, #6C63FF, #00D4FF);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .animate-slide-up {
+    animation: slideUp 0.4s ease-out;
+  }
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
   }
 }
