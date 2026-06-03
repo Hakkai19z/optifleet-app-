@@ -12,6 +12,10 @@ import VueFlotte from './pages/Gestionnaire/VueFlotte'
 import AffectationsPage from './pages/Affectations/AffectationsPage'
 import EntretiensList from './pages/Entretiens/EntretiensList'
 import AlertesList from './pages/Alertes/AlertesList'
+import PleinsList from './pages/Carburant/PleinsList'
+import ReservationsList from './pages/Reservations/ReservationsList'
+import DocumentsList from './pages/Documents/DocumentsList'
+import Statistiques from './pages/Statistiques/Statistiques'
 import AdminDashboard from './pages/Admin/AdminDashboard'
 import UtilisateursList from './pages/Admin/UtilisateursList'
 import CategoriesList from './pages/Admin/CategoriesList'
@@ -76,6 +80,19 @@ export default function App() {
 
         <Route path="/alertes" element={
           <ProtectedRoute requiredRole="GESTIONNAIRE"><AlertesList /></ProtectedRoute>
+        } />
+
+        <Route path="/carburant" element={
+          <ProtectedRoute requiredRole="CONDUCTEUR"><PleinsList /></ProtectedRoute>
+        } />
+        <Route path="/reservations" element={
+          <ProtectedRoute requiredRole="CONDUCTEUR"><ReservationsList /></ProtectedRoute>
+        } />
+        <Route path="/documents" element={
+          <ProtectedRoute requiredRole="CONDUCTEUR"><DocumentsList /></ProtectedRoute>
+        } />
+        <Route path="/statistiques" element={
+          <ProtectedRoute requiredRole="GESTIONNAIRE"><Statistiques /></ProtectedRoute>
         } />
 
         {/* Admin */}
