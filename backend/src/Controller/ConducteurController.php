@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Affectation;
+use App\Entity\Reservation;
 use App\Entity\Utilisateur;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -22,6 +23,35 @@ class ConducteurController extends AbstractController
         /** @var Utilisateur $user */
         $user = $this->getUser();
 
+        // Réservations en cours ou à venir du conducteur (hors annulées/passées)
+        $reservations = $em->getRepository(Reservation::class)
+            ->createQueryBuilder('r')
+            ->leftJoin('r.vehicule', 'rv')->addSelect('rv')
+            ->where('r.conducteur = :user')
+            ->andWhere('r.statut != :annulee')
+            ->andWhere('r.dateFin >= :now')
+            ->setParameter('user', $user)
+            ->setParameter('annulee', 'annulee')
+            ->setParameter('now', new \DateTime())
+            ->orderBy('r.dateDebut', 'ASC')
+            ->getQuery()
+            ->getResult();
+
+        $reservationsJson = array_map(fn (Reservation $r) => [
+            'id' => $r->getId(),
+            'dateDebut' => $r->getDateDebut()?->format('d/m/Y H:i'),
+            'dateFin' => $r->getDateFin()?->format('d/m/Y H:i'),
+            'statut' => $r->getStatut(),
+            'motif' => $r->getMotif(),
+            'vehicule' => $r->getVehicule() ? [
+                'id' => $r->getVehicule()->getId(),
+                'immatriculation' => $r->getVehicule()->getImmatriculation(),
+                'marque' => $r->getVehicule()->getMarque(),
+                'modele' => $r->getVehicule()->getModele(),
+                'statut' => $r->getVehicule()->getStatut(),
+            ] : null,
+        ], $reservations);
+
         $affectation = $em->getRepository(Affectation::class)
             ->createQueryBuilder('a')
             ->leftJoin('a.vehicule', 'v')->addSelect('v')
@@ -36,7 +66,7 @@ class ConducteurController extends AbstractController
             ->getOneOrNullResult();
 
         if (!$affectation) {
-            return $this->json(['vehicule' => null, 'affectation' => null, 'entretiens' => []]);
+            return $this->json(['vehicule' => null, 'affectation' => null, 'entretiens' => [], 'reservations' => $reservationsJson]);
         }
 
         $vehicule = $affectation->getVehicule();
@@ -71,6 +101,7 @@ class ConducteurController extends AbstractController
                 'cout' => $e->getCout(),
                 'notes' => $e->getNotes(),
             ], array_slice($entretiens, 0, 5)),
+            'reservations' => $reservationsJson,
         ]);
     }
 

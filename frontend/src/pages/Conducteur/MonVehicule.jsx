@@ -16,6 +16,49 @@ const TYPE_LABELS = {
   freins: 'Freins', pneus: 'Pneus', autre: 'Autre',
 }
 
+const RESA_STATUT = {
+  en_attente: { label: 'En attente', cls: 'bg-amber-500/15 text-amber-400' },
+  confirmee: { label: 'Confirmée', cls: 'bg-emerald-500/15 text-emerald-400' },
+  annulee: { label: 'Annulée', cls: 'bg-red-500/15 text-red-400' },
+  terminee: { label: 'Terminée', cls: 'bg-slate-500/15 text-slate-400' },
+}
+
+function ReservationsSection({ reservations }) {
+  if (!reservations || reservations.length === 0) return null
+  return (
+    <div className="glass-card p-6">
+      <h3 className="font-display font-semibold text-white mb-4">Mes réservations</h3>
+      <div className="space-y-3">
+        {reservations.map((r) => {
+          const st = RESA_STATUT[r.statut] || { label: r.statut, cls: 'bg-slate-500/15 text-slate-400' }
+          return (
+            <div key={r.id} className="flex items-center gap-4 p-4 rounded-xl border border-white/5"
+              style={{ background: 'rgba(255,255,255,0.03)' }}>
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                style={{ background: 'rgba(0,212,255,0.15)' }}>
+                <svg className="w-5 h-5 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-white">
+                  {r.vehicule ? `${r.vehicule.marque} ${r.vehicule.modele}` : 'Véhicule'}
+                  {r.vehicule && <span className="font-mono text-xs text-slate-400 ml-2">{r.vehicule.immatriculation}</span>}
+                </p>
+                <p className="text-xs text-slate-500">
+                  Du {r.dateDebut} au {r.dateFin}
+                  {r.motif && <span className="text-slate-600"> · {r.motif}</span>}
+                </p>
+              </div>
+              <span className={`text-xs px-2 py-1 rounded-full flex-shrink-0 ${st.cls}`}>{st.label}</span>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
 export default function MonVehicule() {
   const [data, setData] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -60,25 +103,28 @@ export default function MonVehicule() {
   if (!data?.vehicule) {
     return (
       <Layout>
-        <TopBar title="Mon véhicule" />
-        <div className="p-4 md:p-8 flex flex-col items-center justify-center min-h-64">
-          <div className="glass-card p-12 text-center max-w-md">
-            <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4"
-              style={{ background: 'rgba(108,99,255,0.15)' }}>
-              <svg className="w-8 h-8 text-violet-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10l1 1h1m8-1V7a1 1 0 011-1h2l3 4v5l-1 1h-1m-6 0h6" />
-              </svg>
+        <TopBar title="Mon véhicule" subtitle="Informations et historique de votre véhicule affecté" />
+        <div className="p-4 md:p-8 space-y-6 animate-slide-up">
+          <div className="flex flex-col items-center justify-center py-8">
+            <div className="glass-card p-12 text-center max-w-md">
+              <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4"
+                style={{ background: 'rgba(108,99,255,0.15)' }}>
+                <svg className="w-8 h-8 text-violet-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10l1 1h1m8-1V7a1 1 0 011-1h2l3 4v5l-1 1h-1m-6 0h6" />
+                </svg>
+              </div>
+              <h3 className="font-display text-lg font-semibold text-white mb-2">Aucun véhicule affecté</h3>
+              <p className="text-slate-500 text-sm">Vous n'avez pas de véhicule affecté pour le moment. Vos réservations confirmées apparaissent ci-dessous.</p>
             </div>
-            <h3 className="font-display text-lg font-semibold text-white mb-2">Aucun véhicule affecté</h3>
-            <p className="text-slate-500 text-sm">Vous n'avez pas de véhicule affecté pour le moment. Contactez votre gestionnaire.</p>
           </div>
+          <ReservationsSection reservations={data?.reservations} />
         </div>
       </Layout>
     )
   }
 
-  const { vehicule, affectation, entretiens } = data
+  const { vehicule, affectation, entretiens, reservations } = data
 
   return (
     <Layout>
@@ -183,6 +229,9 @@ export default function MonVehicule() {
             />
           </Card>
         )}
+
+        {/* Réservations */}
+        <ReservationsSection reservations={reservations} />
 
         {/* Maintenance history */}
         <div className="glass-card p-6">
