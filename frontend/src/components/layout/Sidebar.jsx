@@ -1,6 +1,7 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
+import { dashboardService } from '../../services/dashboardService'
 
 const navItems = [
   {
@@ -73,6 +74,19 @@ const navItems = [
 export function Sidebar() {
   const { user, logout, hasRole } = useAuth()
   const navigate = useNavigate()
+  const [alertesActives, setAlertesActives] = useState(0)
+
+  // Compteur d'alertes actives (gestionnaires uniquement : l'endpoint exige ROLE_GESTIONNAIRE)
+  useEffect(() => {
+    if (!hasRole('GESTIONNAIRE')) return
+    let actif = true
+    const charger = () => dashboardService.getStats()
+      .then((d) => { if (actif) setAlertesActives(d?.alertes?.actives ?? 0) })
+      .catch(() => {})
+    charger()
+    const intervalle = setInterval(charger, 60000)
+    return () => { actif = false; clearInterval(intervalle) }
+  }, [hasRole])
 
   const handleLogout = () => { logout(); navigate('/login') }
   const visibleItems = navItems.filter(item =>
@@ -109,6 +123,11 @@ export function Sidebar() {
             className={({ isActive }) => `sidebar-link ${isActive ? 'sidebar-link-active' : 'sidebar-link-inactive'}`}>
             {item.icon}
             <span>{item.label}</span>
+            {item.path === '/alertes' && alertesActives > 0 && (
+              <span className="ml-auto min-w-5 h-5 px-1.5 flex items-center justify-center rounded-full text-[11px] font-bold text-white bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.6)] animate-pulse">
+                {alertesActives > 99 ? '99+' : alertesActives}
+              </span>
+            )}
           </NavLink>
         ))}
       </nav>
