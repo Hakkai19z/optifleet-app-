@@ -8,9 +8,11 @@ import { Modal } from '../../components/ui/Modal'
 import { Input } from '../../components/ui/Input'
 import { categorieService } from '../../services/categorieService'
 import { useToastStore } from '../../store/toastStore'
+import { useAuth } from '../../hooks/useAuth'
 
 export default function CategoriesList() {
   const { addToast } = useToastStore()
+  const { hasRole } = useAuth()
   const [categories, setCategories] = useState([])
   const [showModal, setShowModal] = useState(false)
   const [form, setForm] = useState({ libelle: '', description: '' })
@@ -52,9 +54,9 @@ export default function CategoriesList() {
     { key: 'description', label: 'Description', render: (row) => (
       <span className="text-slate-400">{row.description || '—'}</span>
     )},
-    { key: 'actions', label: '', render: (row) => (
+    ...(hasRole('ADMIN') ? [{ key: 'actions', label: '', render: (row) => (
       <Button variant="danger" onClick={() => handleDelete(row.id)}>Supprimer</Button>
-    )},
+    )}] : []),
   ]
 
   return (

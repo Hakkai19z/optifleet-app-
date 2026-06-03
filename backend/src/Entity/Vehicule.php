@@ -48,17 +48,17 @@ class Vehicule
         pattern: '/^[A-Z]{2}-[0-9]{3}-[A-Z]{2}$/',
         message: "L'immatriculation doit suivre le format AA-000-AA"
     )]
-    #[Groups(['vehicule:read', 'vehicule:write', 'affectation:read', 'plein:read', 'reservation:read', 'document:read'])]
+    #[Groups(['vehicule:read', 'vehicule:write', 'affectation:read', 'plein:read', 'reservation:read', 'document:read', 'alerte:read', 'entretien:read'])]
     private ?string $immatriculation = null;
 
     #[ORM\Column(length: 100)]
     #[Assert\NotBlank]
-    #[Groups(['vehicule:read', 'vehicule:write', 'affectation:read', 'plein:read', 'reservation:read', 'document:read'])]
+    #[Groups(['vehicule:read', 'vehicule:write', 'affectation:read', 'plein:read', 'reservation:read', 'document:read', 'alerte:read', 'entretien:read'])]
     private ?string $marque = null;
 
     #[ORM\Column(length: 100)]
     #[Assert\NotBlank]
-    #[Groups(['vehicule:read', 'vehicule:write', 'affectation:read', 'plein:read', 'reservation:read', 'document:read'])]
+    #[Groups(['vehicule:read', 'vehicule:write', 'affectation:read', 'plein:read', 'reservation:read', 'document:read', 'alerte:read', 'entretien:read'])]
     private ?string $modele = null;
 
     #[ORM\Column(type: 'smallint')]
