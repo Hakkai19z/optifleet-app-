@@ -42,13 +42,13 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(length: 100)]
     #[Assert\NotBlank]
     #[Assert\Length(max: 100)]
-    #[Groups(['utilisateur:read', 'utilisateur:write', 'affectation:read'])]
+    #[Groups(['utilisateur:read', 'utilisateur:write', 'affectation:read', 'reservation:read'])]
     private ?string $nom = null;
 
     #[ORM\Column(length: 100)]
     #[Assert\NotBlank]
     #[Assert\Length(max: 100)]
-    #[Groups(['utilisateur:read', 'utilisateur:write', 'affectation:read'])]
+    #[Groups(['utilisateur:read', 'utilisateur:write', 'affectation:read', 'reservation:read'])]
     private ?string $prenom = null;
 
     #[ORM\Column(length: 255, unique: true)]

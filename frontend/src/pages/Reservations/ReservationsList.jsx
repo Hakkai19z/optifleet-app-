@@ -24,7 +24,7 @@ const STATUT_CONFIG = {
 const fmt = (d) => new Date(d).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
 
 export default function ReservationsList() {
-  const { hasRole } = useAuth()
+  const { hasRole, user } = useAuth()
   const { addToast } = useToastStore()
   const [reservations, setReservations] = useState([])
   const [vehicules, setVehicules] = useState([])
@@ -36,15 +36,22 @@ export default function ReservationsList() {
   const reload = () => reservationService.getAll({ 'order[dateDebut]': 'asc' }).then((d) => setReservations(d['hydra:member'] || d))
 
   useEffect(() => {
-    Promise.all([
+    const requests = [
       reservationService.getAll({ 'order[dateDebut]': 'asc' }),
       vehiculeService.getAll(),
-      utilisateurService.getAll(),
-    ]).then(([res, veh, users]) => {
+    ]
+    // La liste des conducteurs n'est accessible qu'aux gestionnaires (ROLE_GESTIONNAIRE).
+    // Un conducteur réserve uniquement pour lui-même, il n'en a donc pas besoin.
+    if (hasRole('GESTIONNAIRE')) {
+      requests.push(utilisateurService.getAll())
+    }
+    Promise.all(requests).then(([res, veh, users]) => {
       setReservations(res['hydra:member'] || res)
       setVehicules(veh['hydra:member'] || veh)
-      const u = users['hydra:member'] || users
-      setConducteurs(u.filter((x) => x.role === 'CONDUCTEUR'))
+      if (users) {
+        const u = users['hydra:member'] || users
+        setConducteurs(u.filter((x) => x.role === 'CONDUCTEUR'))
+      }
     }).finally(() => setIsLoading(false))
   }, [])
 
@@ -53,7 +60,8 @@ export default function ReservationsList() {
     try {
       await reservationService.create({
         vehicule: form.vehicule,
-        conducteur: form.conducteur,
+        // Un conducteur réserve à son nom ; un gestionnaire choisit le conducteur.
+        conducteur: hasRole('GESTIONNAIRE') ? form.conducteur : `/api/utilisateurs/${user.id}`,
         dateDebut: new Date(form.dateDebut).toISOString(),
         dateFin: new Date(form.dateFin).toISOString(),
         statut: 'en_attente',
@@ -133,12 +141,21 @@ export default function ReservationsList() {
               <option key={v.id} value={`/api/vehicules/${v.id}`}>{v.immatriculation} — {v.marque} {v.modele}</option>
             ))}
           </Select>
-          <Select label="Conducteur" value={form.conducteur} onChange={(e) => setForm({ ...form, conducteur: e.target.value })} required>
-            <option value="">— Sélectionner —</option>
-            {conducteurs.map((c) => (
-              <option key={c.id} value={`/api/utilisateurs/${c.id}`}>{c.prenom} {c.nom}</option>
-            ))}
-          </Select>
+          {hasRole('GESTIONNAIRE') ? (
+            <Select label="Conducteur" value={form.conducteur} onChange={(e) => setForm({ ...form, conducteur: e.target.value })} required>
+              <option value="">— Sélectionner —</option>
+              {conducteurs.map((c) => (
+                <option key={c.id} value={`/api/utilisateurs/${c.id}`}>{c.prenom} {c.nom}</option>
+              ))}
+            </Select>
+          ) : (
+            <div>
+              <label className="block text-sm font-medium text-slate-400 mb-1.5">Conducteur</label>
+              <p className="px-4 py-2.5 rounded-xl text-sm text-slate-300 border border-white/5 bg-white/5">
+                {user?.prenom} {user?.nom} <span className="text-slate-500">(vous)</span>
+              </p>
+            </div>
+          )}
           <div className="grid grid-cols-2 gap-3">
             <Input label="Début" type="datetime-local" value={form.dateDebut} onChange={(e) => setForm({ ...form, dateDebut: e.target.value })} required />
             <Input label="Fin" type="datetime-local" value={form.dateFin} onChange={(e) => setForm({ ...form, dateFin: e.target.value })} required />
