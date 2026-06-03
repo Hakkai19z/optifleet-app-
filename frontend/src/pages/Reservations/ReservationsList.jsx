@@ -13,6 +13,7 @@ import { vehiculeService } from '../../services/vehiculeService'
 import { utilisateurService } from '../../services/utilisateurService'
 import { useToastStore } from '../../store/toastStore'
 import { useAuth } from '../../hooks/useAuth'
+import { ReservationCalendar } from './ReservationCalendar'
 
 const STATUT_CONFIG = {
   en_attente: { label: 'En attente', color: '#F59E0B', bg: 'rgba(245,158,11,0.15)' },
@@ -32,6 +33,12 @@ export default function ReservationsList() {
   const [isLoading, setIsLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const [form, setForm] = useState({ vehicule: '', conducteur: '', dateDebut: '', dateFin: '', motif: '' })
+  const [view, setView] = useState('table')
+  const [vehiculeFiltre, setVehiculeFiltre] = useState('')
+
+  const reservationsFiltrees = vehiculeFiltre
+    ? reservations.filter((r) => r.vehicule?.immatriculation === vehiculeFiltre)
+    : reservations
 
   const reload = () => reservationService.getAll({ 'order[dateDebut]': 'asc' }).then((d) => setReservations(d['hydra:member'] || d))
 
@@ -125,9 +132,42 @@ export default function ReservationsList() {
         subtitle="Planification des véhicules de la flotte"
         actions={<Button variant="primary" onClick={() => setShowModal(true)}>+ Nouvelle réservation</Button>}
       />
-      <div className="p-4 md:p-8">
-        <Card className="p-0">
-          {isLoading ? <SkeletonTable /> : (
+      <div className="p-4 md:p-8 space-y-4">
+        {/* Barre d'outils : bascule de vue + filtre véhicule (mode calendrier) */}
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="inline-flex rounded-xl border border-white/10 p-0.5 bg-white/5">
+            {[
+              { id: 'table', label: 'Tableau' },
+              { id: 'calendar', label: 'Calendrier' },
+            ].map((v) => (
+              <button
+                key={v.id}
+                onClick={() => setView(v.id)}
+                className={`px-3.5 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                  view === v.id ? 'text-white' : 'text-slate-400 hover:text-slate-200'
+                }`}
+                style={view === v.id ? { background: 'linear-gradient(135deg, rgba(108,99,255,0.4), rgba(0,212,255,0.25))' } : undefined}
+              >
+                {v.label}
+              </button>
+            ))}
+          </div>
+          {view === 'calendar' && (
+            <div className="w-full sm:w-64">
+              <Select value={vehiculeFiltre} onChange={(e) => setVehiculeFiltre(e.target.value)}>
+                <option value="">Tous les véhicules</option>
+                {vehicules.map((v) => (
+                  <option key={v.id} value={v.immatriculation}>{v.immatriculation} — {v.marque} {v.modele}</option>
+                ))}
+              </Select>
+            </div>
+          )}
+        </div>
+
+        <Card className={view === 'calendar' ? '' : 'p-0'}>
+          {isLoading ? <SkeletonTable /> : view === 'calendar' ? (
+            <ReservationCalendar reservations={reservationsFiltrees} />
+          ) : (
             <Table columns={columns} data={reservations} emptyMessage="Aucune réservation" />
           )}
         </Card>
