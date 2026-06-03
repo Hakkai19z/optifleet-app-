@@ -5,7 +5,10 @@ namespace App\DataFixtures;
 use App\Entity\Affectation;
 use App\Entity\Alerte;
 use App\Entity\Categorie;
+use App\Entity\Document;
 use App\Entity\Entretien;
+use App\Entity\Plein;
+use App\Entity\Reservation;
 use App\Entity\Utilisateur;
 use App\Entity\Vehicule;
 use Doctrine\Bundle\FixturesBundle\Fixture;
@@ -133,6 +136,70 @@ class AppFixtures extends Fixture
         $alerte->setDateEcheance(new \DateTime('-1 week'));
         $alerte->setStatut('en_attente');
         $manager->persist($alerte);
+
+        // Pleins de carburant — historique sur la Clio (km croissants pour le calcul de conso)
+        $pleinsClio = [
+            ['-90 days', 42.5, 1.812, 45200, 'diesel'],
+            ['-60 days', 45.0, 1.795, 45850, 'diesel'],
+            ['-30 days', 40.8, 1.842, 46500, 'diesel'],
+            ['-7 days',  44.2, 1.875, 47100, 'diesel'],
+        ];
+        foreach ($pleinsClio as [$quand, $litres, $prix, $km, $type]) {
+            $plein = new Plein();
+            $plein->setVehicule($vehiculeEntities[0]);
+            $plein->setDate(new \DateTime($quand));
+            $plein->setLitres((string) $litres);
+            $plein->setPrixLitre((string) $prix);
+            $plein->setKilometrage($km);
+            $plein->setTypeCarburant($type);
+            $manager->persist($plein);
+        }
+        // Quelques pleins sur le RAV4 (essence)
+        foreach ([['-40 days', 50.0, 1.932, 14200], ['-12 days', 48.5, 1.958, 14900]] as [$quand, $litres, $prix, $km]) {
+            $plein = new Plein();
+            $plein->setVehicule($vehiculeEntities[4]);
+            $plein->setDate(new \DateTime($quand));
+            $plein->setLitres((string) $litres);
+            $plein->setPrixLitre((string) $prix);
+            $plein->setKilometrage($km);
+            $plein->setTypeCarburant('essence');
+            $manager->persist($plein);
+        }
+
+        // Réservations à venir sur les véhicules disponibles
+        $reservations = [
+            [$vehiculeEntities[2], $conducteurEntities[2], '+3 days 09:00', '+5 days 18:00', 'confirmee', 'Déménagement matériel salon'],
+            [$vehiculeEntities[4], $conducteurEntities[3], '+1 day 08:00',  '+1 day 17:00',  'en_attente', 'Visite client Grenoble'],
+            [$vehiculeEntities[2], $conducteurEntities[1], '+10 days 07:00', '+12 days 19:00', 'confirmee', 'Salon professionnel Marseille'],
+        ];
+        foreach ($reservations as [$veh, $cond, $debut, $fin, $statut, $motif]) {
+            $resa = new Reservation();
+            $resa->setVehicule($veh);
+            $resa->setConducteur($cond);
+            $resa->setDateDebut(new \DateTime($debut));
+            $resa->setDateFin(new \DateTime($fin));
+            $resa->setStatut($statut);
+            $resa->setMotif($motif);
+            $manager->persist($resa);
+        }
+
+        // Documents administratifs — certains expirés/expirant bientôt pour la démo des échéances
+        $documents = [
+            [$vehiculeEntities[0], 'assurance',          'AXA-2024-88123',  '-300 days', '+65 days'],
+            [$vehiculeEntities[0], 'controle_technique', 'CT-2024-0042',    '-200 days', '-5 days'],
+            [$vehiculeEntities[1], 'assurance',          'MAIF-2024-11920', '-180 days', '+20 days'],
+            [$vehiculeEntities[3], 'controle_technique', 'CT-2025-0510',    '-90 days',  '+10 days'],
+            [$vehiculeEntities[4], 'carte_grise',        'QR345ST-FR',      '-700 days', '+400 days'],
+        ];
+        foreach ($documents as [$veh, $type, $numero, $delivrance, $expiration]) {
+            $doc = new Document();
+            $doc->setVehicule($veh);
+            $doc->setType($type);
+            $doc->setNumero($numero);
+            $doc->setDateDelivrance(new \DateTime($delivrance));
+            $doc->setDateExpiration(new \DateTime($expiration));
+            $manager->persist($doc);
+        }
 
         $manager->flush();
     }

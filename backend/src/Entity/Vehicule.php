@@ -115,11 +115,23 @@ class Vehicule
     #[ORM\OneToMany(mappedBy: 'vehicule', targetEntity: Alerte::class)]
     private Collection $alertes;
 
+    #[ORM\OneToMany(mappedBy: 'vehicule', targetEntity: Plein::class)]
+    private Collection $pleins;
+
+    #[ORM\OneToMany(mappedBy: 'vehicule', targetEntity: Reservation::class)]
+    private Collection $reservations;
+
+    #[ORM\OneToMany(mappedBy: 'vehicule', targetEntity: Document::class)]
+    private Collection $documents;
+
     public function __construct()
     {
         $this->affectations = new ArrayCollection();
         $this->entretiens = new ArrayCollection();
         $this->alertes = new ArrayCollection();
+        $this->pleins = new ArrayCollection();
+        $this->reservations = new ArrayCollection();
+        $this->documents = new ArrayCollection();
     }
 
     #[ORM\PrePersist]
@@ -176,6 +188,9 @@ class Vehicule
     public function getAffectations(): Collection { return $this->affectations; }
     public function getEntretiens(): Collection { return $this->entretiens; }
     public function getAlertes(): Collection { return $this->alertes; }
+    public function getPleins(): Collection { return $this->pleins; }
+    public function getReservations(): Collection { return $this->reservations; }
+    public function getDocuments(): Collection { return $this->documents; }
 
     public function isDisponible(): bool
     {
