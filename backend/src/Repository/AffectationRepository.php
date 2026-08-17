@@ -3,6 +3,7 @@
 namespace App\Repository;
 
 use App\Entity\Affectation;
+use App\Entity\Utilisateur;
 use App\Entity\Vehicule;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
@@ -12,6 +13,21 @@ class AffectationRepository extends ServiceEntityRepository
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, Affectation::class);
+    }
+
+    public function isActiveForConducteurAndVehicule(Utilisateur $conducteur, Vehicule $vehicule): bool
+    {
+        $result = $this->createQueryBuilder('a')
+            ->where('a.conducteur = :conducteur')
+            ->andWhere('a.vehicule = :vehicule')
+            ->andWhere('a.dateFin IS NULL OR a.dateFin > :now')
+            ->setParameter('conducteur', $conducteur)
+            ->setParameter('vehicule', $vehicule)
+            ->setParameter('now', new \DateTime())
+            ->getQuery()
+            ->getOneOrNullResult();
+
+        return $result !== null;
     }
 
     public function hasOverlap(Vehicule $vehicule, \DateTimeInterface $dateDebut, ?\DateTimeInterface $dateFin, ?int $excludeId = null): bool

@@ -25,7 +25,10 @@ use Symfony\Component\Validator\Constraints as Assert;
     denormalizationContext: ['groups' => ['plein:write']],
     operations: [
         new GetCollection(security: "is_granted('ROLE_CONDUCTEUR')"),
-        new Post(security: "is_granted('ROLE_CONDUCTEUR')"),
+        new Post(
+            security: "is_granted('ROLE_CONDUCTEUR')",
+            securityPostDenormalize: "is_granted('PLEIN_CREATE', object)"
+        ),
         new Get(security: "is_granted('ROLE_CONDUCTEUR')"),
         new Put(security: "is_granted('ROLE_GESTIONNAIRE')"),
         new Patch(security: "is_granted('ROLE_GESTIONNAIRE')"),

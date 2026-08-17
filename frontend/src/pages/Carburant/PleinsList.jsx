@@ -10,6 +10,7 @@ import { Select } from '../../components/ui/Select'
 import { SkeletonTable } from '../../components/ui/Skeleton'
 import { pleinService } from '../../services/pleinService'
 import { vehiculeService } from '../../services/vehiculeService'
+import { conducteurService } from '../../services/conducteurService'
 import { useToastStore } from '../../store/toastStore'
 import { useAuth } from '../../hooks/useAuth'
 
@@ -37,15 +38,21 @@ export default function PleinsList() {
 
   const reload = () => pleinService.getAll({ 'order[date]': 'desc' }).then((d) => setPleins(d['hydra:member'] || d))
 
+  const isGestionnaire = hasRole('GESTIONNAIRE')
+
   useEffect(() => {
+    const vehiculesPromise = isGestionnaire
+      ? vehiculeService.getAll().then((veh) => veh['hydra:member'] || veh)
+      : conducteurService.getMonVehicule().then((d) => (d.vehicule ? [d.vehicule] : []))
+
     Promise.all([
       pleinService.getAll({ 'order[date]': 'desc' }),
-      vehiculeService.getAll(),
+      vehiculesPromise,
     ]).then(([pl, veh]) => {
       setPleins(pl['hydra:member'] || pl)
-      setVehicules(veh['hydra:member'] || veh)
+      setVehicules(veh)
     }).finally(() => setIsLoading(false))
-  }, [])
+  }, [isGestionnaire])
 
   const totaux = useMemo(() => {
     const litres = pleins.reduce((s, p) => s + parseFloat(p.litres || 0), 0)
@@ -119,7 +126,12 @@ export default function PleinsList() {
       <TopBar
         title="Carburant"
         subtitle="Suivi des pleins et de la consommation"
-        actions={<Button variant="primary" onClick={() => setShowModal(true)}>+ Ajouter un plein</Button>}
+        actions={<Button variant="primary" onClick={() => {
+          if (!isGestionnaire && vehicules.length === 1) {
+            setForm((f) => ({ ...f, vehicule: `/api/vehicules/${vehicules[0].id}` }))
+          }
+          setShowModal(true)
+        }}>+ Ajouter un plein</Button>}
       />
       <div className="p-4 md:p-8 space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
