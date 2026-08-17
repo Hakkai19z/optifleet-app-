@@ -43,6 +43,10 @@ jobs:
           key: ${{ runner.os }}-composer-${{ hashFiles('backend/composer.lock') }}
           restore-keys: ${{ runner.os }}-composer-
 
+      - name: Create .env
+        working-directory: backend
+        run: cp .env.example .env
+
       - name: Install dependencies
         working-directory: backend
         run: composer install --no-interaction --prefer-dist
