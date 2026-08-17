@@ -6,6 +6,7 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     container_name: optifleet_app
+    restart: unless-stopped
     ports:
       - "8000:8000"
     environment:
@@ -28,6 +29,7 @@ services:
   db:
     image: postgres:16-alpine
     container_name: optifleet_db
+    restart: unless-stopped
     environment:
       POSTGRES_DB: optifleet
       POSTGRES_USER: optifleet
@@ -49,6 +51,7 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
     container_name: optifleet_front
+    restart: unless-stopped
     ports:
       - "3000:3000"
     volumes:
