@@ -65,7 +65,7 @@ jobs:
       - name: Run migrations
         working-directory: backend
         env:
-          DATABASE_URL: postgresql://optifleet:secret@127.0.0.1:5432/optifleet_test
+          DATABASE_URL: postgresql://optifleet:secret@127.0.0.1:5432/optifleet
           APP_ENV: test
           JWT_PASSPHRASE: test_passphrase
           JWT_TOKEN_TTL: 900
@@ -75,7 +75,7 @@ jobs:
       - name: Load fixtures
         working-directory: backend
         env:
-          DATABASE_URL: postgresql://optifleet:secret@127.0.0.1:5432/optifleet_test
+          DATABASE_URL: postgresql://optifleet:secret@127.0.0.1:5432/optifleet
           APP_ENV: test
           JWT_PASSPHRASE: test_passphrase
           JWT_TOKEN_TTL: 900
@@ -85,7 +85,7 @@ jobs:
       - name: Run tests
         working-directory: backend
         env:
-          DATABASE_URL: postgresql://optifleet:secret@127.0.0.1:5432/optifleet_test
+          DATABASE_URL: postgresql://optifleet:secret@127.0.0.1:5432/optifleet
           APP_ENV: test
           JWT_PASSPHRASE: test_passphrase
           JWT_TOKEN_TTL: 900
