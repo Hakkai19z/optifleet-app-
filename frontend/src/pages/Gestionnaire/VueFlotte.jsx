@@ -15,7 +15,6 @@ const STATUT_LABELS = { disponible: 'Disponible', en_mission: 'En mission', main
 function VehiculeFlotteCard({ vehicule, onChangerStatut }) {
   const navigate = useNavigate()
   const [changingStatut, setChangingStatut] = useState(false)
-  const { addToast } = useToastStore()
 
   const handleStatut = async (statut) => {
     setChangingStatut(true)
@@ -108,7 +107,7 @@ export default function VueFlotte() {
     } finally {
       setIsLoading(false)
     }
-  }, [])
+  }, [addToast])
 
   useEffect(() => { fetchFlotte() }, [fetchFlotte])
 

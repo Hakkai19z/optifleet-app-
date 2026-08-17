@@ -50,7 +50,7 @@ export default function VehiculeForm() {
         })
       })
     }
-  }, [id])
+  }, [id, isEdit])
 
   const validate = () => {
     const newErrors = {}

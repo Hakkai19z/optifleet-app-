@@ -2,7 +2,6 @@ import React, { useState, useEffect, useCallback } from 'react'
 import { Layout } from '../../components/layout/Layout'
 import { TopBar } from '../../components/layout/TopBar'
 import { Button } from '../../components/ui/Button'
-import { Badge } from '../../components/ui/Badge'
 import { Modal } from '../../components/ui/Modal'
 import { Select } from '../../components/ui/Select'
 import { Input } from '../../components/ui/Input'
@@ -15,7 +14,6 @@ function ConducteurCard({ conducteur, vehiculesDisponibles, onAffecter, onDesaff
   const [vehiculeId, setVehiculeId] = useState('')
   const [commentaire, setCommentaire] = useState('')
   const [loading, setLoading] = useState(false)
-  const { addToast } = useToastStore()
 
   const handleAffecter = async (e) => {
     e.preventDefault()
@@ -158,7 +156,7 @@ export default function AffectationsPage() {
     } finally {
       setIsLoading(false)
     }
-  }, [])
+  }, [addToast])
 
   useEffect(() => { fetchData() }, [fetchData])
 

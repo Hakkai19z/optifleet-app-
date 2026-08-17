@@ -60,7 +60,7 @@ export default function Dashboard() {
     if (hasRole('GESTIONNAIRE')) {
       api.get('/dashboard/vehicules-quota').then(r => setQuotaData(r.data)).catch(() => {})
     }
-  }, [])
+  }, [hasRole])
 
   const pieData = stats ? Object.entries(stats.vehicules.parStatut).map(([name, value]) => ({
     name: STATUT_CONFIG[name]?.label || name,

@@ -6,7 +6,6 @@ export function KmQuotaBar({ kilometrage, quotaKmAnnuel, showLabel = true, class
   const pct = Math.min((kilometrage / quotaKmAnnuel) * 100, 100)
   const isExceeded = kilometrage >= quotaKmAnnuel
   const isWarning = pct >= 80 && !isExceeded
-  const isGood = pct < 80
 
   const barColor = isExceeded
     ? 'linear-gradient(90deg, #EF4444, #DC2626)'

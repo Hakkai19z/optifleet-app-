@@ -60,7 +60,7 @@ export default function ReservationsList() {
         setConducteurs(u.filter((x) => x.role === 'CONDUCTEUR'))
       }
     }).finally(() => setIsLoading(false))
-  }, [])
+  }, [hasRole])
 
   const handleCreate = async (e) => {
     e.preventDefault()

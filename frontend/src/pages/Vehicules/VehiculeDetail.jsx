@@ -24,7 +24,7 @@ export default function VehiculeDetail() {
       .then(setVehicule)
       .catch(() => { addToast('Véhicule introuvable', 'error'); navigate('/vehicules') })
       .finally(() => setIsLoading(false))
-  }, [id])
+  }, [id, addToast, navigate])
 
   const handleDelete = async () => {
     if (!confirm(`Supprimer le véhicule ${vehicule?.immatriculation} ?`)) return

@@ -5,8 +5,9 @@ export function Button({ variant = 'primary', children, className = '', disabled
     : variant === 'danger' ? 'btn-danger'
     : variant === 'ghost' ? 'btn-ghost'
     : 'btn-secondary'
+  const sizeCls = size === 'sm' ? 'text-xs px-3 py-1.5' : ''
   return (
-    <button type={type} className={`${cls} ${className}`} disabled={disabled} onClick={onClick} {...props}>
+    <button type={type} className={`${cls} ${sizeCls} ${className}`} disabled={disabled} onClick={onClick} {...props}>
       {children}
     </button>
   )

@@ -20,7 +20,7 @@ export function useVehicules(params = {}) {
     } finally {
       setIsLoading(false)
     }
-  }, [JSON.stringify(params)])
+  }, [JSON.stringify(params)]) // eslint-disable-line react-hooks/exhaustive-deps -- comparing params by value, not reference
 
   useEffect(() => {
     fetchVehicules()

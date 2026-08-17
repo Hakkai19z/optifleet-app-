@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { Layout } from '../../components/layout/Layout'
 import { TopBar } from '../../components/layout/TopBar'
 import { Card } from '../../components/ui/Card'
@@ -19,14 +19,14 @@ export default function AlertesList() {
   const [isLoading, setIsLoading] = useState(true)
   const [filter, setFilter] = useState('')
 
-  const fetchAlertes = () => {
+  const fetchAlertes = useCallback(() => {
     setIsLoading(true)
     alerteService.getAll(filter ? { statut: filter } : {})
       .then((data) => setAlertes(data['hydra:member'] || data))
       .finally(() => setIsLoading(false))
-  }
+  }, [filter])
 
-  useEffect(() => { fetchAlertes() }, [filter])
+  useEffect(() => { fetchAlertes() }, [fetchAlertes])
 
   const handleStatutChange = async (id, statut) => {
     try {
