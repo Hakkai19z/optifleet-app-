@@ -5,6 +5,7 @@ namespace App\Tests\Unit\Service;
 use App\Entity\Alerte;
 use App\Entity\Vehicule;
 use App\Repository\AlerteRepository;
+use App\Repository\DocumentRepository;
 use App\Repository\EntretienRepository;
 use App\Service\AlerteService;
 use Doctrine\ORM\EntityManagerInterface;
@@ -17,17 +18,20 @@ class AlerteServiceTest extends TestCase
     private EntityManagerInterface&MockObject $entityManager;
     private AlerteRepository&MockObject $alerteRepository;
     private EntretienRepository&MockObject $entretienRepository;
+    private DocumentRepository&MockObject $documentRepository;
 
     protected function setUp(): void
     {
         $this->entityManager = $this->createMock(EntityManagerInterface::class);
         $this->alerteRepository = $this->createMock(AlerteRepository::class);
         $this->entretienRepository = $this->createMock(EntretienRepository::class);
+        $this->documentRepository = $this->createMock(DocumentRepository::class);
 
         $this->alerteService = new AlerteService(
             $this->entityManager,
             $this->alerteRepository,
-            $this->entretienRepository
+            $this->entretienRepository,
+            $this->documentRepository
         );
     }
 
@@ -56,6 +60,9 @@ class AlerteServiceTest extends TestCase
     {
         $this->entretienRepository->expects($this->once())
             ->method('findEchus')
+            ->willReturn([]);
+        $this->documentRepository->expects($this->once())
+            ->method('findExpirant')
             ->willReturn([]);
 
         $count = $this->alerteService->verifierEcheances();
