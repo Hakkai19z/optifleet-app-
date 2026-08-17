@@ -2,6 +2,8 @@
 
 namespace App\Entity;
 
+use ApiPlatform\Doctrine\Orm\Filter\SearchFilter;
+use ApiPlatform\Metadata\ApiFilter;
 use ApiPlatform\Metadata\ApiResource;
 use ApiPlatform\Metadata\Delete;
 use ApiPlatform\Metadata\Get;
@@ -9,8 +11,6 @@ use ApiPlatform\Metadata\GetCollection;
 use ApiPlatform\Metadata\Patch;
 use ApiPlatform\Metadata\Post;
 use ApiPlatform\Metadata\Put;
-use ApiPlatform\Doctrine\Orm\Filter\SearchFilter;
-use ApiPlatform\Metadata\ApiFilter;
 use App\Repository\EntretienRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Groups;
@@ -84,33 +84,111 @@ class Entretien
         $this->createdAt = new \DateTimeImmutable();
     }
 
-    public function getId(): ?int { return $this->id; }
-    public function getType(): ?string { return $this->type; }
-    public function setType(string $type): static { $this->type = $type; return $this; }
-    public function getDateRealise(): ?\DateTimeInterface { return $this->dateRealise; }
-    public function setDateRealise(\DateTimeInterface $dateRealise): static { $this->dateRealise = $dateRealise; return $this; }
-    public function getDateProchaine(): ?\DateTimeInterface { return $this->dateProchaine; }
-    public function setDateProchaine(?\DateTimeInterface $dateProchaine): static { $this->dateProchaine = $dateProchaine; return $this; }
-    public function getKmProchaine(): ?int { return $this->kmProchaine; }
-    public function setKmProchaine(?int $kmProchaine): static { $this->kmProchaine = $kmProchaine; return $this; }
-    public function getCout(): ?string { return $this->cout; }
-    public function setCout(?string $cout): static { $this->cout = $cout; return $this; }
-    public function getNotes(): ?string { return $this->notes; }
-    public function setNotes(?string $notes): static { $this->notes = $notes; return $this; }
-    public function getVehicule(): ?Vehicule { return $this->vehicule; }
-    public function setVehicule(?Vehicule $vehicule): static { $this->vehicule = $vehicule; return $this; }
-    public function getCreatedAt(): ?\DateTimeImmutable { return $this->createdAt; }
+    public function getId(): ?int
+    {
+        return $this->id;
+    }
+
+    public function getType(): ?string
+    {
+        return $this->type;
+    }
+
+    public function setType(string $type): static
+    {
+        $this->type = $type;
+
+        return $this;
+    }
+
+    public function getDateRealise(): ?\DateTimeInterface
+    {
+        return $this->dateRealise;
+    }
+
+    public function setDateRealise(\DateTimeInterface $dateRealise): static
+    {
+        $this->dateRealise = $dateRealise;
+
+        return $this;
+    }
+
+    public function getDateProchaine(): ?\DateTimeInterface
+    {
+        return $this->dateProchaine;
+    }
+
+    public function setDateProchaine(?\DateTimeInterface $dateProchaine): static
+    {
+        $this->dateProchaine = $dateProchaine;
+
+        return $this;
+    }
+
+    public function getKmProchaine(): ?int
+    {
+        return $this->kmProchaine;
+    }
+
+    public function setKmProchaine(?int $kmProchaine): static
+    {
+        $this->kmProchaine = $kmProchaine;
+
+        return $this;
+    }
+
+    public function getCout(): ?string
+    {
+        return $this->cout;
+    }
+
+    public function setCout(?string $cout): static
+    {
+        $this->cout = $cout;
+
+        return $this;
+    }
+
+    public function getNotes(): ?string
+    {
+        return $this->notes;
+    }
+
+    public function setNotes(?string $notes): static
+    {
+        $this->notes = $notes;
+
+        return $this;
+    }
+
+    public function getVehicule(): ?Vehicule
+    {
+        return $this->vehicule;
+    }
+
+    public function setVehicule(?Vehicule $vehicule): static
+    {
+        $this->vehicule = $vehicule;
+
+        return $this;
+    }
+
+    public function getCreatedAt(): ?\DateTimeImmutable
+    {
+        return $this->createdAt;
+    }
 
     public function isEchu(): bool
     {
         $now = new \DateTime();
-        if ($this->dateProchaine !== null && $this->dateProchaine < $now) {
+        if (null !== $this->dateProchaine && $this->dateProchaine < $now) {
             return true;
         }
-        if ($this->kmProchaine !== null && $this->vehicule !== null
+        if (null !== $this->kmProchaine && null !== $this->vehicule
             && $this->kmProchaine < $this->vehicule->getKilometrage()) {
             return true;
         }
+
         return false;
     }
 }

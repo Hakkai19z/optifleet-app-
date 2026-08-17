@@ -23,7 +23,7 @@ class VehiculeVoter extends Voter
     {
         $user = $token->getUser();
 
-        if (!$user instanceof Utilisateur) {
+        if (! $user instanceof Utilisateur) {
             return false;
         }
 

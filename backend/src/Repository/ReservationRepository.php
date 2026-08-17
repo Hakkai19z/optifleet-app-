@@ -35,7 +35,7 @@ class ReservationRepository extends ServiceEntityRepository
             ->setParameter('debut', $debut)
             ->setParameter('fin', $fin);
 
-        if ($excludeId !== null) {
+        if (null !== $excludeId) {
             $qb->andWhere('r.id != :id')->setParameter('id', $excludeId);
         }
 

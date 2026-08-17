@@ -65,13 +65,13 @@ class ConducteurController extends AbstractController
             ->getQuery()
             ->getOneOrNullResult();
 
-        if (!$affectation) {
+        if (! $affectation) {
             return $this->json(['vehicule' => null, 'affectation' => null, 'entretiens' => [], 'reservations' => $reservationsJson]);
         }
 
         $vehicule = $affectation->getVehicule();
         $entretiens = $vehicule->getEntretiens()->toArray();
-        usort($entretiens, fn($a, $b) => $b->getDateRealise() <=> $a->getDateRealise());
+        usort($entretiens, fn ($a, $b) => $b->getDateRealise() <=> $a->getDateRealise());
 
         return $this->json([
             'affectation' => [
@@ -93,7 +93,7 @@ class ConducteurController extends AbstractController
                 'longitude' => $vehicule->getLongitude(),
                 'categorie' => $vehicule->getCategorie()?->getLibelle(),
             ],
-            'entretiens' => array_map(fn($e) => [
+            'entretiens' => array_map(fn ($e) => [
                 'id' => $e->getId(),
                 'type' => $e->getType(),
                 'dateRealise' => $e->getDateRealise()?->format('Y-m-d'),
@@ -130,7 +130,7 @@ class ConducteurController extends AbstractController
             ->getQuery()
             ->getOneOrNullResult();
 
-        if (!$affectation) {
+        if (! $affectation) {
             return $this->json(['message' => 'Aucun véhicule affecté'], Response::HTTP_NOT_FOUND);
         }
 

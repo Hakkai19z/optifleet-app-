@@ -14,15 +14,16 @@ class VehiculeService
         private readonly VehiculeRepository $vehiculeRepository,
         private readonly HttpClientInterface $httpClient,
         private readonly string $googleMapsApiKey,
-    ) {}
+    ) {
+    }
 
     public function creerVehicule(Vehicule $vehicule): Vehicule
     {
-        if (!$this->validerImmatriculation($vehicule->getImmatriculation() ?? '')) {
+        if (! $this->validerImmatriculation($vehicule->getImmatriculation() ?? '')) {
             throw new \InvalidArgumentException('Immatriculation invalide. Format requis: AA-000-AA');
         }
 
-        if ($vehicule->getAdresse() !== null) {
+        if (null !== $vehicule->getAdresse()) {
             $this->geocodeAdresse($vehicule);
         }
 
@@ -39,12 +40,12 @@ class VehiculeService
 
     public function isDisponible(Vehicule $vehicule): bool
     {
-        return $vehicule->getStatut() === 'disponible';
+        return 'disponible' === $vehicule->getStatut();
     }
 
     public function geocodeAdresse(Vehicule $vehicule): void
     {
-        if (empty($this->googleMapsApiKey) || $vehicule->getAdresse() === null) {
+        if (empty($this->googleMapsApiKey) || null === $vehicule->getAdresse()) {
             return;
         }
 
@@ -58,7 +59,7 @@ class VehiculeService
 
             $data = $response->toArray();
 
-            if ($data['status'] === 'OK' && !empty($data['results'])) {
+            if ('OK' === $data['status'] && ! empty($data['results'])) {
                 $location = $data['results'][0]['geometry']['location'];
                 $vehicule->setLatitude((string) $location['lat']);
                 $vehicule->setLongitude((string) $location['lng']);

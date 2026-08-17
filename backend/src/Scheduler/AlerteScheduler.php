@@ -13,7 +13,8 @@ class AlerteScheduler implements ScheduleProviderInterface
 {
     public function __construct(
         private readonly CacheInterface $cache,
-    ) {}
+    ) {
+    }
 
     public function getSchedule(): Schedule
     {

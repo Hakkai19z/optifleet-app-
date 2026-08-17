@@ -2,6 +2,9 @@
 
 namespace App\Entity;
 
+use ApiPlatform\Doctrine\Orm\Filter\OrderFilter;
+use ApiPlatform\Doctrine\Orm\Filter\SearchFilter;
+use ApiPlatform\Metadata\ApiFilter;
 use ApiPlatform\Metadata\ApiResource;
 use ApiPlatform\Metadata\Delete;
 use ApiPlatform\Metadata\Get;
@@ -9,9 +12,6 @@ use ApiPlatform\Metadata\GetCollection;
 use ApiPlatform\Metadata\Patch;
 use ApiPlatform\Metadata\Post;
 use ApiPlatform\Metadata\Put;
-use ApiPlatform\Doctrine\Orm\Filter\SearchFilter;
-use ApiPlatform\Doctrine\Orm\Filter\OrderFilter;
-use ApiPlatform\Metadata\ApiFilter;
 use App\Repository\PleinRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Groups;
@@ -93,22 +93,99 @@ class Plein
         $this->createdAt = new \DateTimeImmutable();
     }
 
-    public function getId(): ?int { return $this->id; }
-    public function getDate(): ?\DateTimeInterface { return $this->date; }
-    public function setDate(\DateTimeInterface $date): static { $this->date = $date; return $this; }
-    public function getLitres(): ?string { return $this->litres; }
-    public function setLitres(string $litres): static { $this->litres = $litres; return $this; }
-    public function getPrixLitre(): ?string { return $this->prixLitre; }
-    public function setPrixLitre(string $prixLitre): static { $this->prixLitre = $prixLitre; return $this; }
-    public function getKilometrage(): ?int { return $this->kilometrage; }
-    public function setKilometrage(int $kilometrage): static { $this->kilometrage = $kilometrage; return $this; }
-    public function getTypeCarburant(): ?string { return $this->typeCarburant; }
-    public function setTypeCarburant(string $typeCarburant): static { $this->typeCarburant = $typeCarburant; return $this; }
-    public function getNotes(): ?string { return $this->notes; }
-    public function setNotes(?string $notes): static { $this->notes = $notes; return $this; }
-    public function getVehicule(): ?Vehicule { return $this->vehicule; }
-    public function setVehicule(?Vehicule $vehicule): static { $this->vehicule = $vehicule; return $this; }
-    public function getCreatedAt(): ?\DateTimeImmutable { return $this->createdAt; }
+    public function getId(): ?int
+    {
+        return $this->id;
+    }
+
+    public function getDate(): ?\DateTimeInterface
+    {
+        return $this->date;
+    }
+
+    public function setDate(\DateTimeInterface $date): static
+    {
+        $this->date = $date;
+
+        return $this;
+    }
+
+    public function getLitres(): ?string
+    {
+        return $this->litres;
+    }
+
+    public function setLitres(string $litres): static
+    {
+        $this->litres = $litres;
+
+        return $this;
+    }
+
+    public function getPrixLitre(): ?string
+    {
+        return $this->prixLitre;
+    }
+
+    public function setPrixLitre(string $prixLitre): static
+    {
+        $this->prixLitre = $prixLitre;
+
+        return $this;
+    }
+
+    public function getKilometrage(): ?int
+    {
+        return $this->kilometrage;
+    }
+
+    public function setKilometrage(int $kilometrage): static
+    {
+        $this->kilometrage = $kilometrage;
+
+        return $this;
+    }
+
+    public function getTypeCarburant(): ?string
+    {
+        return $this->typeCarburant;
+    }
+
+    public function setTypeCarburant(string $typeCarburant): static
+    {
+        $this->typeCarburant = $typeCarburant;
+
+        return $this;
+    }
+
+    public function getNotes(): ?string
+    {
+        return $this->notes;
+    }
+
+    public function setNotes(?string $notes): static
+    {
+        $this->notes = $notes;
+
+        return $this;
+    }
+
+    public function getVehicule(): ?Vehicule
+    {
+        return $this->vehicule;
+    }
+
+    public function setVehicule(?Vehicule $vehicule): static
+    {
+        $this->vehicule = $vehicule;
+
+        return $this;
+    }
+
+    public function getCreatedAt(): ?\DateTimeImmutable
+    {
+        return $this->createdAt;
+    }
 
     #[Groups(['plein:read'])]
     public function getMontant(): float

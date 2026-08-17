@@ -20,7 +20,8 @@ class StatistiquesController extends AbstractController
         private readonly EntretienRepository $entretienRepository,
         private readonly PleinRepository $pleinRepository,
         private readonly DocumentRepository $documentRepository,
-    ) {}
+    ) {
+    }
 
     #[Route('', name: 'statistiques_globales', methods: ['GET'])]
     public function globales(): JsonResponse
@@ -39,7 +40,7 @@ class StatistiquesController extends AbstractController
     private function coutsParMois(): array
     {
         $mois = [];
-        for ($i = 11; $i >= 0; $i--) {
+        for ($i = 11; $i >= 0; --$i) {
             $debut = new \DateTime("first day of -{$i} months 00:00:00");
             $fin = (clone $debut)->modify('last day of this month 23:59:59');
             $mois[] = [
@@ -58,7 +59,7 @@ class StatistiquesController extends AbstractController
         $result = [];
         foreach ($this->vehiculeRepository->findAll() as $v) {
             $conso = $this->pleinRepository->getConsommationMoyenne($v);
-            if ($conso === null) {
+            if (null === $conso) {
                 continue;
             }
             $result[] = [

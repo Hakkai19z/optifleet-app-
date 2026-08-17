@@ -12,11 +12,13 @@ class PleinVoter extends Voter
 {
     public const CREATE = 'PLEIN_CREATE';
 
-    public function __construct(private readonly AffectationRepository $affectationRepository) {}
+    public function __construct(private readonly AffectationRepository $affectationRepository)
+    {
+    }
 
     protected function supports(string $attribute, mixed $subject): bool
     {
-        return $attribute === self::CREATE && $subject instanceof Plein;
+        return self::CREATE === $attribute && $subject instanceof Plein;
     }
 
     protected function voteOnAttribute(string $attribute, mixed $subject, TokenInterface $token): bool
@@ -25,7 +27,7 @@ class PleinVoter extends Voter
         $plein = $subject;
         $user = $token->getUser();
 
-        if (!$user instanceof Utilisateur) {
+        if (! $user instanceof Utilisateur) {
             return false;
         }
 
@@ -34,7 +36,7 @@ class PleinVoter extends Voter
         }
 
         $vehicule = $plein->getVehicule();
-        if ($vehicule === null) {
+        if (null === $vehicule) {
             return false;
         }
 

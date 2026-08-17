@@ -17,7 +17,6 @@ return (new PhpCsFixer\Config())
         'not_operator_with_successor_space' => true,
         'trailing_comma_in_multiline' => true,
         'phpdoc_order' => true,
-        'void_return' => true,
         'concat_space' => ['spacing' => 'one'],
     ])
     ->setFinder($finder)

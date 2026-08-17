@@ -12,22 +12,23 @@ class CreneauDisponibleValidator extends ConstraintValidator
 {
     public function __construct(
         private readonly ReservationRepository $reservationRepository,
-    ) {}
+    ) {
+    }
 
     public function validate(mixed $value, Constraint $constraint): void
     {
-        if (!$constraint instanceof CreneauDisponible) {
+        if (! $constraint instanceof CreneauDisponible) {
             throw new UnexpectedValueException($constraint, CreneauDisponible::class);
         }
 
-        if (!$value instanceof Reservation) {
+        if (! $value instanceof Reservation) {
             return;
         }
 
         // On ne contrôle pas un créneau incomplet ou une réservation annulée.
-        if ($value->getVehicule() === null
-            || $value->getDateDebut() === null
-            || $value->getDateFin() === null
+        if (null === $value->getVehicule()
+            || null === $value->getDateDebut()
+            || null === $value->getDateFin()
             || $value->isAnnulee()) {
             return;
         }

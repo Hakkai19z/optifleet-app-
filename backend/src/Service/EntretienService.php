@@ -12,7 +12,8 @@ class EntretienService
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
         private readonly EntretienRepository $entretienRepository,
-    ) {}
+    ) {
+    }
 
     public function planifier(Vehicule $vehicule, string $type, \DateTimeInterface $dateRealise, ?\DateTimeInterface $dateProchaine = null, ?int $kmProchaine = null, ?float $cout = null): Entretien
     {
@@ -23,7 +24,7 @@ class EntretienService
         $entretien->setDateProchaine($dateProchaine);
         $entretien->setKmProchaine($kmProchaine);
 
-        if ($cout !== null) {
+        if (null !== $cout) {
             $entretien->setCout((string) $cout);
         }
 

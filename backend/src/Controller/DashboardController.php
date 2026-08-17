@@ -18,7 +18,8 @@ class DashboardController extends AbstractController
         private readonly VehiculeRepository $vehiculeRepository,
         private readonly AlerteRepository $alerteRepository,
         private readonly EntretienService $entretienService,
-    ) {}
+    ) {
+    }
 
     #[Route('/vehicules-quota', name: 'dashboard_vehicules_quota', methods: ['GET'])]
     public function vehiculesQuota(): JsonResponse
@@ -27,7 +28,9 @@ class DashboardController extends AbstractController
 
         $result = [];
         foreach ($vehicules as $v) {
-            if ($v->getQuotaKmAnnuel() === null) continue;
+            if (null === $v->getQuotaKmAnnuel()) {
+                continue;
+            }
             $result[] = [
                 'id' => $v->getId(),
                 'immatriculation' => $v->getImmatriculation(),
@@ -41,7 +44,7 @@ class DashboardController extends AbstractController
             ];
         }
 
-        usort($result, fn($a, $b) => $b['pourcentage'] <=> $a['pourcentage']);
+        usort($result, fn ($a, $b) => $b['pourcentage'] <=> $a['pourcentage']);
 
         return $this->json($result);
     }

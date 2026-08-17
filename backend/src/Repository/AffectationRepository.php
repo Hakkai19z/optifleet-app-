@@ -27,7 +27,7 @@ class AffectationRepository extends ServiceEntityRepository
             ->getQuery()
             ->getOneOrNullResult();
 
-        return $result !== null;
+        return null !== $result;
     }
 
     public function hasOverlap(Vehicule $vehicule, \DateTimeInterface $dateDebut, ?\DateTimeInterface $dateFin, ?int $excludeId = null): bool
@@ -36,7 +36,7 @@ class AffectationRepository extends ServiceEntityRepository
             ->where('a.vehicule = :vehicule')
             ->setParameter('vehicule', $vehicule);
 
-        if ($dateFin !== null) {
+        if (null !== $dateFin) {
             $qb->andWhere('a.dateDebut < :dateFin AND (a.dateFin IS NULL OR a.dateFin > :dateDebut)')
                ->setParameter('dateFin', $dateFin)
                ->setParameter('dateDebut', $dateDebut);
@@ -45,7 +45,7 @@ class AffectationRepository extends ServiceEntityRepository
                ->setParameter('dateDebut', $dateDebut);
         }
 
-        if ($excludeId !== null) {
+        if (null !== $excludeId) {
             $qb->andWhere('a.id != :excludeId')
                ->setParameter('excludeId', $excludeId);
         }

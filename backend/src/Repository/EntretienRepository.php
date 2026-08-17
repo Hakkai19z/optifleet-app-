@@ -16,6 +16,7 @@ class EntretienRepository extends ServiceEntityRepository
     public function findEchus(): array
     {
         $now = new \DateTime();
+
         return $this->createQueryBuilder('e')
             ->leftJoin('e.vehicule', 'v')
             ->addSelect('v')

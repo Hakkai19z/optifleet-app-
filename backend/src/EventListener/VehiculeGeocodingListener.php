@@ -13,7 +13,8 @@ class VehiculeGeocodingListener
 {
     public function __construct(
         private readonly VehiculeService $vehiculeService,
-    ) {}
+    ) {
+    }
 
     public function prePersist(Vehicule $vehicule): void
     {
@@ -27,7 +28,7 @@ class VehiculeGeocodingListener
 
     private function geocodeIfNeeded(Vehicule $vehicule): void
     {
-        if ($vehicule->getAdresse() !== null && $vehicule->getLatitude() === null) {
+        if (null !== $vehicule->getAdresse() && null === $vehicule->getLatitude()) {
             $this->vehiculeService->geocodeAdresse($vehicule);
         }
     }

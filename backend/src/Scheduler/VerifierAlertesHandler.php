@@ -12,7 +12,8 @@ class VerifierAlertesHandler
     public function __construct(
         private readonly AlerteService $alerteService,
         private readonly LoggerInterface $logger,
-    ) {}
+    ) {
+    }
 
     public function __invoke(VerifierAlertesMessage $message): void
     {

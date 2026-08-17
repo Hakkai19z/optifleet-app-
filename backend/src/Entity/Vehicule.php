@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use ApiPlatform\Doctrine\Orm\Filter\SearchFilter;
 use ApiPlatform\Metadata\ApiFilter;
 use ApiPlatform\Metadata\ApiResource;
 use ApiPlatform\Metadata\Delete;
@@ -10,7 +11,6 @@ use ApiPlatform\Metadata\GetCollection;
 use ApiPlatform\Metadata\Patch;
 use ApiPlatform\Metadata\Post;
 use ApiPlatform\Metadata\Put;
-use ApiPlatform\Doctrine\Orm\Filter\SearchFilter;
 use App\Repository\VehiculeRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -146,54 +146,199 @@ class Vehicule
         $this->updatedAt = new \DateTimeImmutable();
     }
 
-    public function getId(): ?int { return $this->id; }
-    public function getImmatriculation(): ?string { return $this->immatriculation; }
-    public function setImmatriculation(string $immatriculation): static { $this->immatriculation = $immatriculation; return $this; }
-    public function getMarque(): ?string { return $this->marque; }
-    public function setMarque(string $marque): static { $this->marque = $marque; return $this; }
-    public function getModele(): ?string { return $this->modele; }
-    public function setModele(string $modele): static { $this->modele = $modele; return $this; }
-    public function getAnnee(): ?int { return $this->annee; }
-    public function setAnnee(int $annee): static { $this->annee = $annee; return $this; }
-    public function getKilometrage(): int { return $this->kilometrage; }
-    public function setKilometrage(int $kilometrage): static { $this->kilometrage = $kilometrage; return $this; }
-    public function getQuotaKmAnnuel(): ?int { return $this->quotaKmAnnuel; }
-    public function setQuotaKmAnnuel(?int $quotaKmAnnuel): static { $this->quotaKmAnnuel = $quotaKmAnnuel; return $this; }
+    public function getId(): ?int
+    {
+        return $this->id;
+    }
+
+    public function getImmatriculation(): ?string
+    {
+        return $this->immatriculation;
+    }
+
+    public function setImmatriculation(string $immatriculation): static
+    {
+        $this->immatriculation = $immatriculation;
+
+        return $this;
+    }
+
+    public function getMarque(): ?string
+    {
+        return $this->marque;
+    }
+
+    public function setMarque(string $marque): static
+    {
+        $this->marque = $marque;
+
+        return $this;
+    }
+
+    public function getModele(): ?string
+    {
+        return $this->modele;
+    }
+
+    public function setModele(string $modele): static
+    {
+        $this->modele = $modele;
+
+        return $this;
+    }
+
+    public function getAnnee(): ?int
+    {
+        return $this->annee;
+    }
+
+    public function setAnnee(int $annee): static
+    {
+        $this->annee = $annee;
+
+        return $this;
+    }
+
+    public function getKilometrage(): int
+    {
+        return $this->kilometrage;
+    }
+
+    public function setKilometrage(int $kilometrage): static
+    {
+        $this->kilometrage = $kilometrage;
+
+        return $this;
+    }
+
+    public function getQuotaKmAnnuel(): ?int
+    {
+        return $this->quotaKmAnnuel;
+    }
+
+    public function setQuotaKmAnnuel(?int $quotaKmAnnuel): static
+    {
+        $this->quotaKmAnnuel = $quotaKmAnnuel;
+
+        return $this;
+    }
 
     public function getPourcentageQuota(): ?float
     {
-        if ($this->quotaKmAnnuel === null || $this->quotaKmAnnuel === 0) {
+        if (null === $this->quotaKmAnnuel || 0 === $this->quotaKmAnnuel) {
             return null;
         }
+
         return round(($this->kilometrage / $this->quotaKmAnnuel) * 100, 1);
     }
 
     public function isQuotaDepasse(): bool
     {
-        return $this->quotaKmAnnuel !== null && $this->kilometrage >= $this->quotaKmAnnuel;
+        return null !== $this->quotaKmAnnuel && $this->kilometrage >= $this->quotaKmAnnuel;
     }
 
-    public function getStatut(): string { return $this->statut; }
-    public function setStatut(string $statut): static { $this->statut = $statut; return $this; }
-    public function getCategorie(): ?Categorie { return $this->categorie; }
-    public function setCategorie(?Categorie $categorie): static { $this->categorie = $categorie; return $this; }
-    public function getLatitude(): ?string { return $this->latitude; }
-    public function setLatitude(?string $latitude): static { $this->latitude = $latitude; return $this; }
-    public function getLongitude(): ?string { return $this->longitude; }
-    public function setLongitude(?string $longitude): static { $this->longitude = $longitude; return $this; }
-    public function getAdresse(): ?string { return $this->adresse; }
-    public function setAdresse(?string $adresse): static { $this->adresse = $adresse; return $this; }
-    public function getCreatedAt(): ?\DateTimeImmutable { return $this->createdAt; }
-    public function getUpdatedAt(): ?\DateTimeImmutable { return $this->updatedAt; }
-    public function getAffectations(): Collection { return $this->affectations; }
-    public function getEntretiens(): Collection { return $this->entretiens; }
-    public function getAlertes(): Collection { return $this->alertes; }
-    public function getPleins(): Collection { return $this->pleins; }
-    public function getReservations(): Collection { return $this->reservations; }
-    public function getDocuments(): Collection { return $this->documents; }
+    public function getStatut(): string
+    {
+        return $this->statut;
+    }
+
+    public function setStatut(string $statut): static
+    {
+        $this->statut = $statut;
+
+        return $this;
+    }
+
+    public function getCategorie(): ?Categorie
+    {
+        return $this->categorie;
+    }
+
+    public function setCategorie(?Categorie $categorie): static
+    {
+        $this->categorie = $categorie;
+
+        return $this;
+    }
+
+    public function getLatitude(): ?string
+    {
+        return $this->latitude;
+    }
+
+    public function setLatitude(?string $latitude): static
+    {
+        $this->latitude = $latitude;
+
+        return $this;
+    }
+
+    public function getLongitude(): ?string
+    {
+        return $this->longitude;
+    }
+
+    public function setLongitude(?string $longitude): static
+    {
+        $this->longitude = $longitude;
+
+        return $this;
+    }
+
+    public function getAdresse(): ?string
+    {
+        return $this->adresse;
+    }
+
+    public function setAdresse(?string $adresse): static
+    {
+        $this->adresse = $adresse;
+
+        return $this;
+    }
+
+    public function getCreatedAt(): ?\DateTimeImmutable
+    {
+        return $this->createdAt;
+    }
+
+    public function getUpdatedAt(): ?\DateTimeImmutable
+    {
+        return $this->updatedAt;
+    }
+
+    public function getAffectations(): Collection
+    {
+        return $this->affectations;
+    }
+
+    public function getEntretiens(): Collection
+    {
+        return $this->entretiens;
+    }
+
+    public function getAlertes(): Collection
+    {
+        return $this->alertes;
+    }
+
+    public function getPleins(): Collection
+    {
+        return $this->pleins;
+    }
+
+    public function getReservations(): Collection
+    {
+        return $this->reservations;
+    }
+
+    public function getDocuments(): Collection
+    {
+        return $this->documents;
+    }
 
     public function isDisponible(): bool
     {
-        return $this->statut === 'disponible';
+        return 'disponible' === $this->statut;
     }
 }

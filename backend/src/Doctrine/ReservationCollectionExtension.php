@@ -27,7 +27,7 @@ final class ReservationCollectionExtension implements QueryCollectionExtensionIn
         ?Operation $operation = null,
         array $context = []
     ): void {
-        if ($resourceClass !== Reservation::class) {
+        if (Reservation::class !== $resourceClass) {
             return;
         }
 
@@ -37,7 +37,7 @@ final class ReservationCollectionExtension implements QueryCollectionExtensionIn
         }
 
         $user = $this->security->getUser();
-        if (!$user instanceof Utilisateur) {
+        if (! $user instanceof Utilisateur) {
             return;
         }
 

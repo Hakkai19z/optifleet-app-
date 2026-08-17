@@ -21,7 +21,8 @@ class AlerteService
         private readonly AlerteRepository $alerteRepository,
         private readonly EntretienRepository $entretienRepository,
         private readonly DocumentRepository $documentRepository,
-    ) {}
+    ) {
+    }
 
     public function creerAlerte(Vehicule $vehicule, string $type, string $message, \DateTimeInterface $dateEcheance): Alerte
     {
@@ -44,9 +45,9 @@ class AlerteService
         $entretienEchus = $this->entretienRepository->findEchus();
 
         foreach ($entretienEchus as $entretien) {
-            if (!$this->alerteRepository->existsForVehiculeAndType($entretien->getVehicule(), $entretien->getType())) {
+            if (! $this->alerteRepository->existsForVehiculeAndType($entretien->getVehicule(), $entretien->getType())) {
                 $this->creerAlerteEntretien($entretien);
-                $count++;
+                ++$count;
             }
         }
 
@@ -55,13 +56,13 @@ class AlerteService
 
         foreach ($documentsExpirant as $document) {
             $vehicule = $document->getVehicule();
-            if ($vehicule === null) {
+            if (null === $vehicule) {
                 continue;
             }
             $typeAlerte = $this->mapTypeDocument($document->getType());
-            if (!$this->alerteRepository->existsForVehiculeAndType($vehicule, $typeAlerte)) {
+            if (! $this->alerteRepository->existsForVehiculeAndType($vehicule, $typeAlerte)) {
                 $this->creerAlerteDocument($document, $typeAlerte);
-                $count++;
+                ++$count;
             }
         }
 
@@ -122,7 +123,7 @@ class AlerteService
 
         $alerte = new Alerte();
         $alerte->setVehicule($vehicule);
-        $alerte->setType($entretien->getType() === 'CT' ? 'CT' : ($entretien->getType() === 'vidange' ? 'vidange' : 'revision'));
+        $alerte->setType('CT' === $entretien->getType() ? 'CT' : ('vidange' === $entretien->getType() ? 'vidange' : 'revision'));
         $alerte->setMessage($message);
         $alerte->setDateEcheance($dateEcheance);
         $alerte->setStatut('en_attente');

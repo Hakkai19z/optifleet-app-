@@ -73,7 +73,7 @@ class GestionnaireController extends AbstractController
             ->getQuery()
             ->getResult();
 
-        $result = array_map(fn($v) => [
+        $result = array_map(fn ($v) => [
             'id' => $v->getId(),
             'immatriculation' => $v->getImmatriculation(),
             'marque' => $v->getMarque(),
@@ -94,17 +94,17 @@ class GestionnaireController extends AbstractController
         $vehiculeId = $data['vehiculeId'] ?? null;
         $commentaire = $data['commentaire'] ?? null;
 
-        if (!$conducteurId || !$vehiculeId) {
+        if (! $conducteurId || ! $vehiculeId) {
             return $this->json(['message' => 'conducteurId et vehiculeId sont requis'], Response::HTTP_BAD_REQUEST);
         }
 
         $conducteur = $em->getRepository(Utilisateur::class)->find($conducteurId);
         $vehicule = $em->getRepository(Vehicule::class)->find($vehiculeId);
 
-        if (!$conducteur || $conducteur->getRole() !== 'CONDUCTEUR') {
+        if (! $conducteur || 'CONDUCTEUR' !== $conducteur->getRole()) {
             return $this->json(['message' => 'Conducteur introuvable'], Response::HTTP_NOT_FOUND);
         }
-        if (!$vehicule) {
+        if (! $vehicule) {
             return $this->json(['message' => 'Véhicule introuvable'], Response::HTTP_NOT_FOUND);
         }
 
@@ -148,7 +148,7 @@ class GestionnaireController extends AbstractController
     {
         $affectation = $em->getRepository(Affectation::class)->find($affectationId);
 
-        if (!$affectation) {
+        if (! $affectation) {
             return $this->json(['message' => 'Affectation introuvable'], Response::HTTP_NOT_FOUND);
         }
 
@@ -213,7 +213,7 @@ class GestionnaireController extends AbstractController
     {
         $vehicule = $em->getRepository(Vehicule::class)->find($vehiculeId);
 
-        if (!$vehicule) {
+        if (! $vehicule) {
             return $this->json(['message' => 'Véhicule introuvable'], Response::HTTP_NOT_FOUND);
         }
 
@@ -221,7 +221,7 @@ class GestionnaireController extends AbstractController
         $statut = $data['statut'] ?? '';
 
         $statutsValides = ['disponible', 'en_mission', 'maintenance', 'inactif'];
-        if (!in_array($statut, $statutsValides)) {
+        if (! in_array($statut, $statutsValides)) {
             return $this->json(['message' => 'Statut invalide'], Response::HTTP_BAD_REQUEST);
         }
 
