@@ -20,6 +20,19 @@ export const useAuthStore = create((set) => ({
     }
   },
 
+  register: async (nom, prenom, email, motDePasse) => {
+    set({ isLoading: true, error: null })
+    try {
+      const { user } = await authService.register(nom, prenom, email, motDePasse)
+      set({ user, isAuthenticated: true, isLoading: false })
+      return user
+    } catch (err) {
+      const message = err.response?.data?.message || "Erreur lors de l'inscription"
+      set({ error: message, isLoading: false })
+      throw err
+    }
+  },
+
   logout: () => {
     authService.logout()
     set({ user: null, isAuthenticated: false })

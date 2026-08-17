@@ -13,6 +13,18 @@ export const authService = {
     return { token, user }
   },
 
+  async register(nom, prenom, email, motDePasse) {
+    const response = await api.post('/auth/register', { nom, prenom, email, motDePasse })
+    const { token } = response.data
+    localStorage.setItem('token', token)
+
+    const meResponse = await api.get('/auth/me')
+    const user = meResponse.data
+    localStorage.setItem('user', JSON.stringify(user))
+
+    return { token, user }
+  },
+
   logout() {
     localStorage.removeItem('token')
     localStorage.removeItem('user')

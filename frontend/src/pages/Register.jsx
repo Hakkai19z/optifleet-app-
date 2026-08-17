@@ -2,17 +2,36 @@ import React, { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 
-export default function Login() {
+export default function Register() {
+  const [nom, setNom] = useState('')
+  const [prenom, setPrenom] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const { login, isLoading, error, isAuthenticated, clearError } = useAuth()
+  const [passwordConfirm, setPasswordConfirm] = useState('')
+  const [formError, setFormError] = useState('')
+  const { register, isLoading, error, isAuthenticated, clearError } = useAuth()
   const navigate = useNavigate()
 
   useEffect(() => { if (isAuthenticated) navigate('/dashboard') }, [isAuthenticated, navigate])
 
   const handleSubmit = async (e) => {
-    e.preventDefault(); clearError()
-    try { await login(email, password); navigate('/dashboard') } catch {}
+    e.preventDefault()
+    setFormError('')
+    clearError()
+
+    if (password.length < 8) {
+      setFormError('Le mot de passe doit contenir au moins 8 caractères')
+      return
+    }
+    if (password !== passwordConfirm) {
+      setFormError('Les mots de passe ne correspondent pas')
+      return
+    }
+
+    try {
+      await register(nom, prenom, email, password)
+      navigate('/dashboard')
+    } catch {}
   }
 
   return (
@@ -65,26 +84,16 @@ export default function Login() {
           </div>
 
           <h1 className="font-display text-4xl font-bold text-white mb-4">
-            Gérez votre flotte
-            <span className="block text-gradient">avec précision</span>
+            Rejoignez
+            <span className="block text-gradient">OptiFleet</span>
           </h1>
           <p className="text-slate-400 text-lg leading-relaxed">
-            Suivi en temps réel, alertes intelligentes, optimisation des coûts — tout ce dont vous avez besoin.
+            Créez votre compte conducteur pour accéder à vos véhicules, réservations et documents.
           </p>
-
-          {/* Stats */}
-          <div className="grid grid-cols-3 gap-4 mt-10">
-            {[['99.9%', 'Disponibilité'], ['< 2min', 'Temps réponse'], ['ISO 27001', 'Sécurité']].map(([val, label]) => (
-              <div key={label} className="glass-card p-4">
-                <p className="font-display font-bold text-white">{val}</p>
-                <p className="text-xs text-slate-500 mt-0.5">{label}</p>
-              </div>
-            ))}
-          </div>
         </div>
       </div>
 
-      {/* Right panel - Login form */}
+      {/* Right panel - Register form */}
       <div className="w-full lg:w-[440px] flex items-center justify-center p-8">
         <div className="w-full max-w-sm">
           <div className="flex items-center gap-3 mb-10">
@@ -101,25 +110,42 @@ export default function Login() {
             </div>
           </div>
 
-          <h2 className="font-display text-2xl font-bold text-white mb-2">Bienvenue</h2>
-          <p className="text-slate-400 text-sm mb-8">Connectez-vous à votre espace de gestion</p>
+          <h2 className="font-display text-2xl font-bold text-white mb-2">Créer un compte</h2>
+          <p className="text-slate-400 text-sm mb-8">Inscrivez-vous en tant que conducteur</p>
 
-          {error && (
+          {(formError || error) && (
             <div className="flex items-center gap-3 p-4 rounded-xl border border-red-500/20 mb-6"
               style={{ background: 'rgba(239,68,68,0.1)' }}>
-              <span className="text-red-400 text-sm">⚠ {error}</span>
+              <span className="text-red-400 text-sm">⚠ {formError || error}</span>
             </div>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-5">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="form-label">Prénom</label>
+                <input type="text" value={prenom} onChange={(e) => setPrenom(e.target.value)}
+                  className="form-input" placeholder="Pierre" required />
+              </div>
+              <div>
+                <label className="form-label">Nom</label>
+                <input type="text" value={nom} onChange={(e) => setNom(e.target.value)}
+                  className="form-input" placeholder="Martin" required />
+              </div>
+            </div>
             <div>
               <label className="form-label">Adresse e-mail</label>
               <input type="email" value={email} onChange={(e) => setEmail(e.target.value)}
-                className="form-input" placeholder="admin@optifleet.fr" required />
+                className="form-input" placeholder="vous@exemple.fr" required />
             </div>
             <div>
               <label className="form-label">Mot de passe</label>
               <input type="password" value={password} onChange={(e) => setPassword(e.target.value)}
+                className="form-input" placeholder="8 caractères minimum" required />
+            </div>
+            <div>
+              <label className="form-label">Confirmer le mot de passe</label>
+              <input type="password" value={passwordConfirm} onChange={(e) => setPasswordConfirm(e.target.value)}
                 className="form-input" placeholder="••••••••" required />
             </div>
 
@@ -130,17 +156,17 @@ export default function Login() {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
                   </svg>
-                  Connexion...
+                  Création du compte...
                 </span>
-              ) : 'Se connecter →'}
+              ) : 'Créer mon compte →'}
             </button>
           </form>
 
           <div className="mt-8 pt-6 border-t border-white/5 text-center">
             <p className="text-sm text-slate-400">
-              Pas encore de compte ?{' '}
-              <Link to="/register" className="text-violet-400 hover:text-violet-300 font-medium">
-                Créer un compte →
+              Déjà un compte ?{' '}
+              <Link to="/login" className="text-violet-400 hover:text-violet-300 font-medium">
+                Se connecter →
               </Link>
             </p>
           </div>

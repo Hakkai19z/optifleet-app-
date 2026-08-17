@@ -1,7 +1,7 @@
 import { useAuthStore } from '../store/authStore'
 
 export function useAuth() {
-  const { user, isAuthenticated, isLoading, error, login, logout, clearError } = useAuthStore()
+  const { user, isAuthenticated, isLoading, error, login, register, logout, clearError } = useAuthStore()
 
   const hasRole = (role) => {
     if (!user) return false
@@ -11,5 +11,5 @@ export function useAuth() {
     return userLevel >= requiredLevel
   }
 
-  return { user, isAuthenticated, isLoading, error, login, logout, clearError, hasRole }
+  return { user, isAuthenticated, isLoading, error, login, register, logout, clearError, hasRole }
 }
