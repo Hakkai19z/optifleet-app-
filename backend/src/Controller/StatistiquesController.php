@@ -6,8 +6,11 @@ use App\Repository\DocumentRepository;
 use App\Repository\EntretienRepository;
 use App\Repository\PleinRepository;
 use App\Repository\VehiculeRepository;
+use Dompdf\Dompdf;
+use Dompdf\Options;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
@@ -32,6 +35,77 @@ class StatistiquesController extends AbstractController
             'documentsExpirant' => $this->documentsExpirant(),
             'totaux' => $this->totaux(),
         ]);
+    }
+
+    #[Route('/export-pdf', name: 'statistiques_export_pdf', methods: ['GET'])]
+    public function exportPdf(): Response
+    {
+        $html = $this->genererHtmlRapport($this->totaux(), $this->coutsParMois(), $this->consommationParVehicule());
+
+        $options = new Options();
+        $options->set('defaultFont', 'Helvetica');
+        $options->set('isRemoteEnabled', false);
+
+        $dompdf = new Dompdf($options);
+        $dompdf->loadHtml($html);
+        $dompdf->setPaper('A4', 'portrait');
+        $dompdf->render();
+
+        return new Response($dompdf->output(), Response::HTTP_OK, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="rapport-flotte.pdf"',
+        ]);
+    }
+
+    /**
+     * @param array<string, mixed>             $totaux
+     * @param array<int, array<string, mixed>> $couts
+     * @param array<int, array<string, mixed>> $conso
+     */
+    private function genererHtmlRapport(array $totaux, array $couts, array $conso): string
+    {
+        $esc = static fn (mixed $v): string => htmlspecialchars((string) $v, ENT_QUOTES);
+        $euros = static fn (mixed $v): string => number_format((float) $v, 2, ',', ' ') . ' €';
+
+        $lignesCouts = '';
+        foreach ($couts as $mois) {
+            $lignesCouts .= '<tr><td>' . $esc($mois['label'] ?? '') . '</td>'
+                . '<td class="r">' . $euros($mois['entretien'] ?? 0) . '</td>'
+                . '<td class="r">' . $euros($mois['carburant'] ?? 0) . '</td></tr>';
+        }
+
+        $lignesConso = '';
+        foreach ($conso as $v) {
+            $lignesConso .= '<tr><td>' . $esc($v['immatriculation'] ?? '') . '</td>'
+                . '<td>' . $esc($v['modele'] ?? '') . '</td>'
+                . '<td class="r">' . $esc($v['consommation'] ?? '—') . ' L/100 km</td></tr>';
+        }
+
+        return '<html><head><style>
+            body { font-family: Helvetica, sans-serif; color: #1c1c28; font-size: 12px; }
+            h1 { color: #4F46E5; font-size: 22px; margin-bottom: 2px; }
+            .sub { color: #777; font-size: 11px; margin-bottom: 18px; }
+            h2 { color: #33308f; font-size: 14px; margin-top: 22px; border-bottom: 1px solid #ddd; padding-bottom: 3px; }
+            table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+            th { background: #4F46E5; color: #fff; text-align: left; padding: 6px 8px; font-size: 11px; }
+            td { padding: 5px 8px; border-bottom: 1px solid #eee; }
+            .r { text-align: right; }
+            .kpi { display: inline-block; border: 1px solid #ddd; padding: 8px 14px; margin-right: 10px; }
+            .kpi b { display: block; font-size: 18px; color: #4F46E5; }
+            .kpi span { font-size: 10px; color: #777; text-transform: uppercase; }
+            </style></head><body>
+            <h1>OptiFleet — Rapport de flotte</h1>
+            <div class="sub">Généré le ' . date('d/m/Y') . '</div>
+            <div>
+              <div class="kpi"><b>' . $euros($totaux['carburant12Mois'] ?? 0) . '</b><span>Carburant 12 mois</span></div>
+              <div class="kpi"><b>' . $euros($totaux['entretien12Mois'] ?? 0) . '</b><span>Entretien 12 mois</span></div>
+              <div class="kpi"><b>' . $esc($totaux['documentsExpirant'] ?? 0) . '</b><span>Documents à échéance</span></div>
+            </div>
+            <h2>Coûts mensuels consolidés</h2>
+            <table><tr><th>Mois</th><th class="r">Entretien</th><th class="r">Carburant</th></tr>' . $lignesCouts . '</table>
+            <h2>Consommation moyenne par véhicule</h2>
+            <table><tr><th>Immatriculation</th><th>Modèle</th><th class="r">Consommation</th></tr>' . $lignesConso . '</table>
+            </body></html>';
     }
 
     /**

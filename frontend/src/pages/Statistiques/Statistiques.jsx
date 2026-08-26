@@ -6,6 +6,7 @@ import { Card } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
 import { SkeletonCard } from '../../components/ui/Skeleton'
 import { statistiqueService } from '../../services/statistiqueService'
+import api from '../../services/api'
 import { useToastStore } from '../../store/toastStore'
 
 const tooltipStyle = { background: '#1C2437', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', color: '#F1F5F9' }
@@ -61,12 +62,32 @@ export default function Statistiques() {
     addToast('Export CSV généré')
   }
 
+  const handleExportPdf = async () => {
+    try {
+      const res = await api.get('/statistiques/export-pdf', { responseType: 'blob' })
+      const url = URL.createObjectURL(new Blob([res.data], { type: 'application/pdf' }))
+      const a = document.createElement('a')
+      a.href = url
+      a.download = 'rapport-flotte.pdf'
+      a.click()
+      URL.revokeObjectURL(url)
+      addToast('Rapport PDF généré')
+    } catch {
+      addToast('Erreur lors de l\'export PDF', 'error')
+    }
+  }
+
   return (
     <Layout>
       <TopBar
         title="Statistiques"
         subtitle="Analyse des coûts et de la consommation de la flotte"
-        actions={<Button variant="ghost" onClick={handleExportCouts}>⬇ Exporter les coûts (CSV)</Button>}
+        actions={
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" onClick={handleExportCouts}>⬇ Coûts (CSV)</Button>
+            <Button variant="secondary" onClick={handleExportPdf}>⬇ Rapport (PDF)</Button>
+          </div>
+        }
       />
 
       <div className="p-4 md:p-8 space-y-6">
