@@ -46,6 +46,7 @@ class Categorie
     #[Groups(['categorie:read', 'categorie:write'])]
     private ?string $description = null;
 
+    /** @var Collection<int, Vehicule> */
     #[ORM\OneToMany(mappedBy: 'categorie', targetEntity: Vehicule::class)]
     private Collection $vehicules;
 
@@ -83,6 +84,9 @@ class Categorie
         return $this;
     }
 
+    /**
+     * @return Collection<int, Vehicule>
+     */
     public function getVehicules(): Collection
     {
         return $this->vehicules;

@@ -6,6 +6,9 @@ use App\Entity\Vehicule;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
+/**
+ * @extends ServiceEntityRepository<Vehicule>
+ */
 class VehiculeRepository extends ServiceEntityRepository
 {
     public function __construct(ManagerRegistry $registry)
@@ -13,6 +16,9 @@ class VehiculeRepository extends ServiceEntityRepository
         parent::__construct($registry, Vehicule::class);
     }
 
+    /**
+     * @return Vehicule[]
+     */
     public function findByStatut(string $statut): array
     {
         return $this->createQueryBuilder('v')
@@ -23,6 +29,9 @@ class VehiculeRepository extends ServiceEntityRepository
             ->getResult();
     }
 
+    /**
+     * @return array<int, array{statut: string, total: int}>
+     */
     public function countByStatut(): array
     {
         return $this->createQueryBuilder('v')

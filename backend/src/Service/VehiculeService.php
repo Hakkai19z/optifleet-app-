@@ -68,6 +68,9 @@ class VehiculeService
         }
     }
 
+    /**
+     * @return array<int, array<string, mixed>>
+     */
     public function getStatsByStatut(): array
     {
         return $this->vehiculeRepository->countByStatut();

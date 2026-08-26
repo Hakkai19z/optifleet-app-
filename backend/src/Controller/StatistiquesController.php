@@ -37,6 +37,9 @@ class StatistiquesController extends AbstractController
     /**
      * Coûts entretien + carburant agrégés sur les 12 derniers mois.
      */
+    /**
+     * @return array<int, array<string, mixed>>
+     */
     private function coutsParMois(): array
     {
         $mois = [];
@@ -54,6 +57,9 @@ class StatistiquesController extends AbstractController
         return $mois;
     }
 
+    /**
+     * @return array<int, array<string, mixed>>
+     */
     private function consommationParVehicule(): array
     {
         $result = [];
@@ -74,6 +80,9 @@ class StatistiquesController extends AbstractController
         return $result;
     }
 
+    /**
+     * @return array<int, array<string, mixed>>
+     */
     private function documentsExpirant(): array
     {
         $result = [];
@@ -91,6 +100,9 @@ class StatistiquesController extends AbstractController
         return $result;
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     private function totaux(): array
     {
         $debut = new \DateTime('-12 months');

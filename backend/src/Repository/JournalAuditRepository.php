@@ -2,17 +2,17 @@
 
 namespace App\Repository;
 
-use App\Entity\Categorie;
+use App\Entity\JournalAudit;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
- * @extends ServiceEntityRepository<Categorie>
+ * @extends ServiceEntityRepository<JournalAudit>
  */
-class CategorieRepository extends ServiceEntityRepository
+class JournalAuditRepository extends ServiceEntityRepository
 {
     public function __construct(ManagerRegistry $registry)
     {
-        parent::__construct($registry, Categorie::class);
+        parent::__construct($registry, JournalAudit::class);
     }
 }

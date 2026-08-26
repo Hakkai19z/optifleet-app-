@@ -1,4 +1,4 @@
-FROM php:8.3-fpm-alpine AS builder
+FROM php:8.3-fpm-alpine@sha256:bf90236449d333cef008b1f01c72a3d4f11a6470a74629665e4c6b6158f03fc8 AS builder
 
 RUN apk add --no-cache \
     git \
@@ -23,7 +23,7 @@ RUN composer install --no-dev --no-scripts --no-autoloader --prefer-dist --optim
 COPY . .
 RUN composer dump-autoload --optimize --classmap-authoritative
 
-FROM php:8.3-fpm-alpine
+FROM php:8.3-fpm-alpine@sha256:bf90236449d333cef008b1f01c72a3d4f11a6470a74629665e4c6b6158f03fc8
 
 RUN apk add --no-cache postgresql-dev icu-libs libzip \
     && docker-php-ext-install pdo pdo_pgsql intl zip opcache

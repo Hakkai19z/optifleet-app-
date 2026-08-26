@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Utilisateur;
+use App\Service\AuditLogger;
 use Doctrine\ORM\EntityManagerInterface;
 use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -31,6 +32,7 @@ class AuthController extends AbstractController
         EntityManagerInterface $em,
         UserPasswordHasherInterface $hasher,
         JWTTokenManagerInterface $jwtManager,
+        AuditLogger $audit,
     ): JsonResponse {
         $limiter = $this->registerLimiter->create($request->getClientIp());
         $limit = $limiter->consume(1);
@@ -85,6 +87,8 @@ class AuthController extends AbstractController
 
         $limiter->reset();
 
+        $audit->enregistrer('inscription', $email, 'Compte conducteur créé', $email);
+
         $token = $jwtManager->create($user);
 
         return $this->json(['token' => $token], Response::HTTP_CREATED);
@@ -96,6 +100,7 @@ class AuthController extends AbstractController
         EntityManagerInterface $em,
         UserPasswordHasherInterface $hasher,
         JWTTokenManagerInterface $jwtManager,
+        AuditLogger $audit,
     ): JsonResponse {
         $limiter = $this->loginLimiter->create($request->getClientIp());
         $limit = $limiter->consume(1);
@@ -114,11 +119,19 @@ class AuthController extends AbstractController
 
         $user = $em->getRepository(Utilisateur::class)->findOneBy(['email' => $email]);
 
-        if (! $user || ! $hasher->isPasswordValid($user, $motDePasse)) {
+        // Un compte anonymisé (RGPD) ne peut plus se connecter.
+        if (! $user || null !== $user->getAnonymiseA() || ! $hasher->isPasswordValid($user, $motDePasse)) {
+            $audit->enregistrer('login_echec', '' !== $email ? $email : null, 'Identifiants incorrects', '' !== $email ? $email : null);
+
             return $this->json(['message' => 'Identifiants incorrects'], Response::HTTP_UNAUTHORIZED);
         }
 
         $limiter->reset();
+
+        $user->setDerniereConnexionA(new \DateTimeImmutable());
+        $em->flush();
+
+        $audit->enregistrer('login_reussi', null, null, $user->getUserIdentifier());
 
         $token = $jwtManager->create($user);
 
@@ -141,14 +154,25 @@ class AuthController extends AbstractController
     }
 
     #[Route('/delete-account', name: 'auth_delete_account', methods: ['DELETE'])]
-    public function deleteAccount(EntityManagerInterface $em): JsonResponse
+    public function deleteAccount(EntityManagerInterface $em, UserPasswordHasherInterface $hasher, AuditLogger $audit): JsonResponse
     {
         /** @var Utilisateur $user */
         $user = $this->getUser();
+        $email = $user->getUserIdentifier();
 
-        $em->remove($user);
+        // Anonymisation plutôt que suppression physique : la ligne est conservée
+        // (l'historique d'affectations la référence par clé étrangère), mais toutes
+        // les données personnelles sont effacées et le compte devient inutilisable.
+        $user->setNom('Utilisateur');
+        $user->setPrenom('anonymisé');
+        $user->setEmail('anonyme-' . $user->getId() . '@rgpd.invalid');
+        $user->setMotDePasse($hasher->hashPassword($user, bin2hex(random_bytes(16))));
+        $user->setAnonymiseA(new \DateTimeImmutable());
+
         $em->flush();
 
-        return $this->json(['message' => 'Compte supprimé conformément au RGPD'], Response::HTTP_OK);
+        $audit->enregistrer('compte_supprime', $email, 'Anonymisation RGPD du compte', $email);
+
+        return $this->json(['message' => 'Compte anonymisé conformément au RGPD (droit à l\'effacement)'], Response::HTTP_OK);
     }
 }

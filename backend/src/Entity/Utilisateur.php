@@ -102,6 +102,16 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
     #[Groups(['utilisateur:read'])]
     private ?\DateTimeImmutable $createdAt = null;
 
+    // Dernière connexion réussie — sert au calcul d'inactivité (purge RGPD).
+    #[ORM\Column(nullable: true)]
+    #[Groups(['utilisateur:read'])]
+    private ?\DateTimeImmutable $derniereConnexionA = null;
+
+    // Horodatage d'anonymisation RGPD ; non nul signifie compte anonymisé.
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $anonymiseA = null;
+
+    /** @var Collection<int, Affectation> */
     #[ORM\OneToMany(mappedBy: 'conducteur', targetEntity: Affectation::class)]
     private Collection $affectations;
 
@@ -198,6 +208,30 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
         return $this->createdAt;
     }
 
+    public function getDerniereConnexionA(): ?\DateTimeImmutable
+    {
+        return $this->derniereConnexionA;
+    }
+
+    public function setDerniereConnexionA(?\DateTimeImmutable $date): static
+    {
+        $this->derniereConnexionA = $date;
+
+        return $this;
+    }
+
+    public function getAnonymiseA(): ?\DateTimeImmutable
+    {
+        return $this->anonymiseA;
+    }
+
+    public function setAnonymiseA(?\DateTimeImmutable $date): static
+    {
+        $this->anonymiseA = $date;
+
+        return $this;
+    }
+
     public function getRoles(): array
     {
         return ['ROLE_' . $this->role, 'ROLE_USER'];
@@ -218,6 +252,9 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
         $this->plainMotDePasse = null;
     }
 
+    /**
+     * @return Collection<int, Affectation>
+     */
     public function getAffectations(): Collection
     {
         return $this->affectations;

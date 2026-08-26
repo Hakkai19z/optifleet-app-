@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\Affectation;
 use App\Entity\Utilisateur;
 use App\Entity\Vehicule;
+use App\Service\AuditLogger;
 use App\Service\NotificationService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -88,7 +89,7 @@ class GestionnaireController extends AbstractController
     }
 
     #[Route('/affecter', name: 'gestionnaire_affecter', methods: ['POST'])]
-    public function affecterVehicule(Request $request, EntityManagerInterface $em, NotificationService $notification): JsonResponse
+    public function affecterVehicule(Request $request, EntityManagerInterface $em, NotificationService $notification, AuditLogger $audit): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
         $conducteurId = $data['conducteurId'] ?? null;
@@ -157,6 +158,7 @@ class GestionnaireController extends AbstractController
         $em->flush();
 
         $notification->notifierAffectation($conducteur, $vehicule);
+        $audit->enregistrer('affectation', $vehicule->getImmatriculation(), sprintf('Affecté à %s', $conducteur->getUserIdentifier()));
 
         return $this->json([
             'message' => sprintf('Véhicule %s affecté à %s %s', $vehicule->getImmatriculation(), $conducteur->getPrenom(), $conducteur->getNom()),
@@ -165,7 +167,7 @@ class GestionnaireController extends AbstractController
     }
 
     #[Route('/desaffecter/{affectationId}', name: 'gestionnaire_desaffecter', methods: ['DELETE'])]
-    public function desaffecterVehicule(int $affectationId, EntityManagerInterface $em): JsonResponse
+    public function desaffecterVehicule(int $affectationId, EntityManagerInterface $em, AuditLogger $audit): JsonResponse
     {
         $affectation = $em->getRepository(Affectation::class)->find($affectationId);
 
@@ -183,6 +185,8 @@ class GestionnaireController extends AbstractController
         $affectation->getVehicule()->setStatut('disponible');
 
         $em->flush();
+
+        $audit->enregistrer('desaffectation', $affectation->getVehicule()->getImmatriculation());
 
         return $this->json(['message' => 'Véhicule libéré avec succès']);
     }

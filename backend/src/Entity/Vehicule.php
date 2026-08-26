@@ -107,21 +107,27 @@ class Vehicule
     #[Groups(['vehicule:read'])]
     private ?\DateTimeImmutable $updatedAt = null;
 
+    /** @var Collection<int, Affectation> */
     #[ORM\OneToMany(mappedBy: 'vehicule', targetEntity: Affectation::class)]
     private Collection $affectations;
 
+    /** @var Collection<int, Entretien> */
     #[ORM\OneToMany(mappedBy: 'vehicule', targetEntity: Entretien::class)]
     private Collection $entretiens;
 
+    /** @var Collection<int, Alerte> */
     #[ORM\OneToMany(mappedBy: 'vehicule', targetEntity: Alerte::class)]
     private Collection $alertes;
 
+    /** @var Collection<int, Plein> */
     #[ORM\OneToMany(mappedBy: 'vehicule', targetEntity: Plein::class)]
     private Collection $pleins;
 
+    /** @var Collection<int, Reservation> */
     #[ORM\OneToMany(mappedBy: 'vehicule', targetEntity: Reservation::class)]
     private Collection $reservations;
 
+    /** @var Collection<int, Document> */
     #[ORM\OneToMany(mappedBy: 'vehicule', targetEntity: Document::class)]
     private Collection $documents;
 
@@ -308,31 +314,49 @@ class Vehicule
         return $this->updatedAt;
     }
 
+    /**
+     * @return Collection<int, Affectation>
+     */
     public function getAffectations(): Collection
     {
         return $this->affectations;
     }
 
+    /**
+     * @return Collection<int, Entretien>
+     */
     public function getEntretiens(): Collection
     {
         return $this->entretiens;
     }
 
+    /**
+     * @return Collection<int, Alerte>
+     */
     public function getAlertes(): Collection
     {
         return $this->alertes;
     }
 
+    /**
+     * @return Collection<int, Plein>
+     */
     public function getPleins(): Collection
     {
         return $this->pleins;
     }
 
+    /**
+     * @return Collection<int, Reservation>
+     */
     public function getReservations(): Collection
     {
         return $this->reservations;
     }
 
+    /**
+     * @return Collection<int, Document>
+     */
     public function getDocuments(): Collection
     {
         return $this->documents;
