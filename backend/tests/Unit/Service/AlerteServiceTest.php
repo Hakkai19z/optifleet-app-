@@ -64,9 +64,40 @@ class AlerteServiceTest extends TestCase
         $this->documentRepository->expects($this->once())
             ->method('findExpirant')
             ->willReturn([]);
+        $this->alerteRepository->expects($this->once())
+            ->method('findActiveAlertes')
+            ->willReturn([]);
 
         $count = $this->alerteService->verifierEcheances();
         $this->assertSame(0, $count);
+    }
+
+    // Une alerte d'échéance dont la condition a disparu est auto-résolue ;
+    // un signalement manuel (type 'autre') n'est jamais touché.
+    public function testAutoResolutionAlerteObsolete(): void
+    {
+        $this->entretienRepository->method('findEchus')->willReturn([]);
+        $this->documentRepository->method('findExpirant')->willReturn([]);
+
+        $vehicule = new Vehicule();
+
+        $alerteEcheance = new Alerte();
+        $alerteEcheance->setVehicule($vehicule);
+        $alerteEcheance->setType('vidange');
+        $alerteEcheance->setStatut('en_attente');
+
+        $alerteManuelle = new Alerte();
+        $alerteManuelle->setVehicule($vehicule);
+        $alerteManuelle->setType('autre');
+        $alerteManuelle->setStatut('en_attente');
+
+        $this->alerteRepository->method('findActiveAlertes')
+            ->willReturn([$alerteEcheance, $alerteManuelle]);
+
+        $this->alerteService->verifierEcheances();
+
+        $this->assertSame('resolue', $alerteEcheance->getStatut(), 'Alerte d\'échéance obsolète auto-résolue');
+        $this->assertSame('en_attente', $alerteManuelle->getStatut(), 'Signalement manuel préservé');
     }
 
     public function testCountActiveAlertes(): void

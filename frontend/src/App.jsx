@@ -4,6 +4,7 @@ import { useAuth } from './hooks/useAuth'
 
 import Login from './pages/Login'
 import Register from './pages/Register'
+import Confidentialite from './pages/Confidentialite'
 import Dashboard from './pages/Dashboard'
 import MonVehicule from './pages/Conducteur/MonVehicule'
 import VehiculesList from './pages/Vehicules/VehiculesList'
@@ -44,6 +45,7 @@ export default function App() {
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/confidentialite" element={<Confidentialite />} />
         <Route path="/" element={<HomeRedirect />} />
 
         <Route path="/dashboard" element={

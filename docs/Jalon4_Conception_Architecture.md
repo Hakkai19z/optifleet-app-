@@ -290,11 +290,42 @@ classDiagram
         -string description
     }
 
+    class Plein {
+        -int id
+        -date date
+        -decimal litres
+        -decimal prixLitre
+        -int kilometrage
+        -string typeCarburant
+        +getMontant() float
+    }
+
+    class Reservation {
+        -int id
+        -datetime dateDebut
+        -datetime dateFin
+        -string statut
+        -string motif
+    }
+
+    class Document {
+        -int id
+        -string type
+        -string numero
+        -date dateDelivrance
+        -date dateExpiration
+        +isExpire() bool
+    }
+
     Utilisateur "1" --> "0..*" Affectation : conduit
     Vehicule "1" --> "0..*" Affectation : est affecté
     Categorie "1" --> "0..*" Vehicule : classe
     Vehicule "1" --> "0..*" Entretien : subit
     Vehicule "1" --> "0..*" Alerte : déclenche
+    Vehicule "1" --> "0..*" Plein : consomme
+    Vehicule "1" --> "0..*" Document : possède
+    Utilisateur "1" --> "0..*" Reservation : réserve
+    Vehicule "1" --> "0..*" Reservation : est réservé
 ```
 
 ### 4.2 Lecture des relations et cardinalités
@@ -306,6 +337,9 @@ classDiagram
 | Categorie → Vehicule | Association (1-N) | 1 catégorie, N véhicules | Une catégorie (Berline, SUV…) regroupe plusieurs véhicules |
 | Vehicule → Entretien | Composition (1-N) | 1 véhicule, N entretiens | Les entretiens n'existent pas sans véhicule |
 | Vehicule → Alerte | Composition (1-N) | 1 véhicule, N alertes | Les alertes sont rattachées à un véhicule |
+| Vehicule → Plein | Composition (1-N) | 1 véhicule, N pleins | Le suivi carburant (litres, prix, km) est rattaché à un véhicule |
+| Vehicule → Document | Composition (1-N) | 1 véhicule, N documents | Assurance, carte grise, contrôle technique du véhicule |
+| Utilisateur / Vehicule → Reservation | Association (1-N) | N réservations | Un conducteur réserve un véhicule sur un créneau daté (détection de conflit) |
 
 > **À propos d'`Affectation` :** cette entité est une **classe d'association** entre `Utilisateur` (conducteur) et `Vehicule`. Elle porte des attributs propres (`dateDebut`, `dateFin`, `commentaire`) et une logique métier (`isActive()` : une affectation est active si `dateFin` est nulle ou future). Elle matérialise le cœur du domaine : « qui conduit quel véhicule, et depuis quand ».
 

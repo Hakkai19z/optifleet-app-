@@ -30,6 +30,27 @@ class AffectationRepository extends ServiceEntityRepository
         return null !== $result;
     }
 
+    /**
+     * Indique si le conducteur a (ou a eu) au moins une affectation sur ce
+     * véhicule — active ou passée. Sert au contrôle d'accès en lecture des
+     * pleins : un conducteur ne voit que les pleins des véhicules qu'il conduit
+     * ou a conduits.
+     */
+    public function existsForConducteurAndVehicule(Utilisateur $conducteur, Vehicule $vehicule): bool
+    {
+        $result = $this->createQueryBuilder('a')
+            ->select('1')
+            ->where('a.conducteur = :conducteur')
+            ->andWhere('a.vehicule = :vehicule')
+            ->setParameter('conducteur', $conducteur)
+            ->setParameter('vehicule', $vehicule)
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult();
+
+        return null !== $result;
+    }
+
     public function hasOverlap(Vehicule $vehicule, \DateTimeInterface $dateDebut, ?\DateTimeInterface $dateFin, ?int $excludeId = null): bool
     {
         $qb = $this->createQueryBuilder('a')

@@ -17,7 +17,7 @@ export default function UtilisateursList() {
   const [users, setUsers] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
-  const [form, setForm] = useState({ nom: '', prenom: '', email: '', motDePasse: '', role: 'CONDUCTEUR' })
+  const [form, setForm] = useState({ nom: '', prenom: '', email: '', plainMotDePasse: '', role: 'CONDUCTEUR' })
 
   const fetchUsers = () => {
     utilisateurService.getAll()
@@ -33,7 +33,7 @@ export default function UtilisateursList() {
       await utilisateurService.create(form)
       addToast('Utilisateur créé')
       setShowModal(false)
-      setForm({ nom: '', prenom: '', email: '', motDePasse: '', role: 'CONDUCTEUR' })
+      setForm({ nom: '', prenom: '', email: '', plainMotDePasse: '', role: 'CONDUCTEUR' })
       fetchUsers()
     } catch {
       addToast('Erreur lors de la création', 'error')
@@ -89,7 +89,7 @@ export default function UtilisateursList() {
             <Input label="Prénom" value={form.prenom} onChange={(e) => setForm({ ...form, prenom: e.target.value })} required />
           </div>
           <Input label="Email" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} required />
-          <Input label="Mot de passe" type="password" value={form.motDePasse} onChange={(e) => setForm({ ...form, motDePasse: e.target.value })} required />
+          <Input label="Mot de passe" type="password" value={form.plainMotDePasse} onChange={(e) => setForm({ ...form, plainMotDePasse: e.target.value })} required />
           <Select label="Rôle" value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })}>
             <option value="CONDUCTEUR">Conducteur</option>
             <option value="GESTIONNAIRE">Gestionnaire</option>

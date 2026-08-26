@@ -11,6 +11,7 @@ use ApiPlatform\Metadata\GetCollection;
 use ApiPlatform\Metadata\Patch;
 use ApiPlatform\Metadata\Post;
 use App\Repository\ReservationRepository;
+use App\State\ReservationProcessor;
 use App\Validator\CreneauDisponible;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Groups;
@@ -23,9 +24,16 @@ use Symfony\Component\Validator\Constraints as Assert;
     normalizationContext: ['groups' => ['reservation:read']],
     denormalizationContext: ['groups' => ['reservation:write']],
     operations: [
+        // La collection est filtrée par conducteur via ReservationCollectionExtension.
         new GetCollection(security: "is_granted('ROLE_CONDUCTEUR')"),
-        new Post(security: "is_granted('ROLE_CONDUCTEUR')"),
-        new Get(security: "is_granted('ROLE_CONDUCTEUR')"),
+        // À la création, le processor force le conducteur = utilisateur courant
+        // (sauf gestionnaire) : impossible de réserver au nom d'autrui.
+        new Post(
+            security: "is_granted('ROLE_CONDUCTEUR')",
+            processor: ReservationProcessor::class,
+        ),
+        // Lecture unitaire : le conducteur ne voit que ses propres réservations.
+        new Get(security: "is_granted('ROLE_GESTIONNAIRE') or object.getConducteur() == user"),
         new Patch(security: "is_granted('ROLE_GESTIONNAIRE')"),
         new Delete(security: "is_granted('ROLE_GESTIONNAIRE')"),
     ]

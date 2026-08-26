@@ -8,7 +8,7 @@
 
 OptiFleet est une application web complète de gestion de flotte de véhicules d'entreprise : affectation des véhicules aux conducteurs, suivi des entretiens et du carburant, alertes automatiques sur les échéances (contrôle technique, assurance, révisions), réservations avec détection de conflits, et statistiques de coûts.
 
-Projet réalisé dans le cadre d'un Bachelor — API REST découplée d'une SPA React, avec authentification JWT, contrôle d'accès par rôles et une CI complète (style, analyse statique, tests, build).
+Projet fil rouge réalisé dans le cadre du titre **CDA (Concepteur Développeur d'Applications)** — API REST découplée d'une SPA React, avec authentification JWT, contrôle d'accès par rôles et une CI complète (style, analyse statique, tests, build).
 
 ## Aperçu
 
@@ -58,7 +58,7 @@ Projet réalisé dans le cadre d'un Bachelor — API REST découplée d'une SPA 
 - Inscription en libre-service (`/register`), avec connexion automatique après création du compte
 
 ### Sécurité
-- Authentification **JWT (RS256)** avec expiration courte (15 min) et refresh token
+- Authentification **JWT (RS256)** avec expiration courte du jeton d'accès (15 min)
 - Hiérarchie de rôles `ADMIN > GESTIONNAIRE > CONDUCTEUR` (Symfony Security Voters)
 - Rate limiting sur les endpoints de connexion et d'inscription (anti brute-force)
 - Un conducteur ne peut déclarer un plein / consulter ses réservations que pour son **propre** véhicule affecté
@@ -175,10 +175,14 @@ Chaque push sur `main` déclenche deux workflows GitHub Actions :
 
 ## Sécurité
 
-- Mots de passe hachés avec **bcrypt**
+- Mots de passe hachés avec **bcrypt** (coût 12) ; politique de complexité (min. 8 caractères, majuscule + minuscule + chiffre). Le mot de passe n'est **jamais** exposé ni écrit en clair, y compris via l'API (propriété transitoire `plainMotDePasse` + processor de hachage)
 - JWT signé **RS256** (clé privée/publique dédiée), TTL de 15 minutes
-- Contrôle d'accès par **Security Voters** Symfony (ex. `PleinVoter` : un conducteur ne peut créer un plein que pour le véhicule qui lui est actuellement affecté)
+- Contrôle d'accès par **Security Voters** Symfony (ex. `PleinVoter`) **et sécurité au niveau des champs** : le rôle n'est modifiable que par un administrateur (aucune auto-élévation de privilèges possible)
+- **Cloisonnement des données par conducteur** : un conducteur ne voit que ses réservations et les pleins des véhicules qu'il conduit (extensions Doctrine + voters, en collection comme en lecture unitaire)
+- **En-têtes de sécurité HTTP** sur toutes les réponses : `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, `Content-Security-Policy`, et `HSTS` en production
 - Rate limiting sur `/api/auth/login` et `/api/auth/register`
+- **CORS** restreint : seul `/api` est ouvert, à l'origine définie par `CORS_ALLOW_ORIGIN`
+- Conformité **RGPD** : suppression de compte (`DELETE /api/auth/delete-account`) et politique de confidentialité accessible dans l'application
 - `.env` exclu du dépôt à tous les niveaux (jamais de secret versionné)
 
 ## Structure du projet

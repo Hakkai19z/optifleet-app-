@@ -153,4 +153,58 @@ class ConducteurController extends AbstractController
 
         return $this->json(['message' => 'Problème signalé avec succès', 'id' => $alerte->getId()]);
     }
+
+    #[Route('/kilometrage', name: 'conducteur_maj_kilometrage', methods: ['PATCH'])]
+    public function majKilometrage(Request $request, EntityManagerInterface $em): JsonResponse
+    {
+        /** @var Utilisateur $user */
+        $user = $this->getUser();
+
+        $data = json_decode($request->getContent(), true);
+        $kilometrage = $data['kilometrage'] ?? null;
+
+        if (! is_numeric($kilometrage) || (int) $kilometrage != $kilometrage) {
+            return $this->json(['message' => 'Le kilométrage doit être un nombre entier'], Response::HTTP_BAD_REQUEST);
+        }
+        $kilometrage = (int) $kilometrage;
+
+        if ($kilometrage < 0) {
+            return $this->json(['message' => 'Le kilométrage doit être positif'], Response::HTTP_BAD_REQUEST);
+        }
+
+        // Le conducteur ne peut mettre à jour que le véhicule qui lui est
+        // actuellement affecté.
+        $affectation = $em->getRepository(Affectation::class)
+            ->createQueryBuilder('a')
+            ->leftJoin('a.vehicule', 'v')->addSelect('v')
+            ->where('a.conducteur = :user')
+            ->andWhere('a.dateFin IS NULL OR a.dateFin > :now')
+            ->setParameter('user', $user)
+            ->setParameter('now', new \DateTime())
+            ->orderBy('a.dateDebut', 'DESC')
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult();
+
+        if (! $affectation) {
+            return $this->json(['message' => 'Aucun véhicule affecté'], Response::HTTP_NOT_FOUND);
+        }
+
+        $vehicule = $affectation->getVehicule();
+
+        // Le compteur ne peut pas reculer.
+        if ($kilometrage < $vehicule->getKilometrage()) {
+            return $this->json([
+                'message' => sprintf('Le kilométrage ne peut pas être inférieur au kilométrage actuel (%d km)', $vehicule->getKilometrage()),
+            ], Response::HTTP_BAD_REQUEST);
+        }
+
+        $vehicule->setKilometrage($kilometrage);
+        $em->flush();
+
+        return $this->json([
+            'message' => 'Kilométrage mis à jour',
+            'kilometrage' => $vehicule->getKilometrage(),
+        ]);
+    }
 }

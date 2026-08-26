@@ -19,7 +19,13 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    // Un 401 sur les points d'authentification (mauvais identifiants, etc.) doit
+    // remonter à l'écran pour afficher le message ; on ne déconnecte/redirige que
+    // sur un 401 d'une ressource protégée (jeton expiré ou invalide).
+    const url = error.config?.url || ''
+    const isAuthEndpoint = url.includes('/auth/login') || url.includes('/auth/register')
+
+    if (error.response?.status === 401 && !isAuthEndpoint) {
       localStorage.removeItem('token')
       localStorage.removeItem('user')
       window.location.href = '/login'

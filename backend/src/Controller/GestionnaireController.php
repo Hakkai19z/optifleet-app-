@@ -125,6 +125,24 @@ class GestionnaireController extends AbstractController
             $ancienVehicule->setStatut('disponible');
         }
 
+        // Clôturer toute affectation active du véhicule cible détenue par un
+        // AUTRE conducteur : un véhicule ne peut être affecté qu'à une seule
+        // personne à la fois (garantit l'unicité de l'affectation active).
+        $affectationsVehicule = $em->getRepository(Affectation::class)
+            ->createQueryBuilder('a')
+            ->where('a.vehicule = :vehicule')
+            ->andWhere('a.conducteur != :conducteur')
+            ->andWhere('a.dateFin IS NULL OR a.dateFin > :now')
+            ->setParameter('vehicule', $vehicule)
+            ->setParameter('conducteur', $conducteur)
+            ->setParameter('now', new \DateTime())
+            ->getQuery()
+            ->getResult();
+
+        foreach ($affectationsVehicule as $affexistante) {
+            $affexistante->setDateFin(new \DateTime());
+        }
+
         // Nouvelle affectation
         $affectation = new Affectation();
         $affectation->setConducteur($conducteur);
@@ -150,6 +168,12 @@ class GestionnaireController extends AbstractController
 
         if (! $affectation) {
             return $this->json(['message' => 'Affectation introuvable'], Response::HTTP_NOT_FOUND);
+        }
+
+        // Garde-fou : ne pas re-clôturer une affectation déjà terminée, ce qui
+        // pourrait libérer par erreur un véhicule entre-temps réaffecté.
+        if (null !== $affectation->getDateFin() && $affectation->getDateFin() <= new \DateTime()) {
+            return $this->json(['message' => 'Cette affectation est déjà clôturée'], Response::HTTP_BAD_REQUEST);
         }
 
         $affectation->setDateFin(new \DateTime());
@@ -226,6 +250,24 @@ class GestionnaireController extends AbstractController
         }
 
         $vehicule->setStatut($statut);
+
+        // Cohérence : un véhicule rendu « disponible » ou « inactif » ne peut pas
+        // rester affecté à un conducteur → on clôture ses affectations actives.
+        if (in_array($statut, ['disponible', 'inactif'], true)) {
+            $affectationsActives = $em->getRepository(Affectation::class)
+                ->createQueryBuilder('a')
+                ->where('a.vehicule = :vehicule')
+                ->andWhere('a.dateFin IS NULL OR a.dateFin > :now')
+                ->setParameter('vehicule', $vehicule)
+                ->setParameter('now', new \DateTime())
+                ->getQuery()
+                ->getResult();
+
+            foreach ($affectationsActives as $aff) {
+                $aff->setDateFin(new \DateTime());
+            }
+        }
+
         $em->flush();
 
         return $this->json(['message' => 'Statut mis à jour', 'statut' => $statut]);

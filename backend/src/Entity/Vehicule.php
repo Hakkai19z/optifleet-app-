@@ -28,9 +28,10 @@ use Symfony\Component\Validator\Constraints as Assert;
         new GetCollection(),
         new Post(security: "is_granted('ROLE_GESTIONNAIRE')"),
         new Get(),
-        new Put(security: "is_granted('ROLE_GESTIONNAIRE')"),
-        new Patch(security: "is_granted('ROLE_GESTIONNAIRE')"),
-        new Delete(security: "is_granted('ROLE_ADMIN')"),
+        // Autorisation au niveau objet déléguée à VehiculeVoter (EDIT/DELETE).
+        new Put(security: "is_granted('EDIT', object)"),
+        new Patch(security: "is_granted('EDIT', object)"),
+        new Delete(security: "is_granted('DELETE', object)"),
     ]
 )]
 #[ApiFilter(SearchFilter::class, properties: ['statut' => 'exact', 'categorie' => 'exact'])]

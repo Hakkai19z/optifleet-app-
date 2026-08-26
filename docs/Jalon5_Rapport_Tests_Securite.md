@@ -309,18 +309,20 @@ role_hierarchy:
 
 **Mesure :** `NelmioCorsBundle` configuré. En production, l'origine autorisée est restreinte via la variable d'environnement `CORS_ALLOW_ORIGIN` (expression régulière limitant aux domaines légitimes).
 
-### 5.10 Synthèse OWASP
+### 5.10 Synthèse — positionnement OWASP Top 10:2025
 
-| Faille OWASP | Statut | Mesure |
-|--------------|--------|--------|
-| Injection SQL | ✅ Couvert | Doctrine ORM + requêtes paramétrées |
-| XSS | ✅ Couvert | Échappement React + API JSON |
-| CSRF | ✅ Couvert | API stateless JWT (pas de cookie de session) |
-| Authentification faible | ✅ Couvert | Bcrypt coût 12 + JWT RS256 |
-| Brute force | ✅ Couvert | Rate Limiter 5/15 min |
-| Contrôle d'accès défaillant | ✅ Couvert | Hiérarchie de rôles + Voters |
-| Données personnelles | ✅ Couvert | RGPD : suppression de compte |
-| Entrées non validées | ✅ Couvert | Contraintes Assert Symfony |
+| Rang | Catégorie | Position | Mesure en place ou écart assumé |
+|------|-----------|----------|---------------------------------|
+| A01 | Broken Access Control | ✅ Couvert | Hiérarchie de rôles, contrôle par point d'accès, Voters au niveau objet (`VehiculeVoter`, `PleinVoter`), sécurité au niveau **champ** (le rôle n'est modifiable que par un admin) et cloisonnement des collections par conducteur (`ReservationCollectionExtension`, `PleinCollectionExtension`) |
+| A02 | Security Misconfiguration | ✅ Couvert | Secrets externalisés (`.env` non versionné), CORS restreint à `/api`, **en-têtes HTTP de sécurité** (`X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, `Content-Security-Policy`, `HSTS` en prod) via `SecurityHeadersListener`, `APP_ENV=prod` (debug désactivé) |
+| A03 | Software Supply Chain Failures | 🟡 Partiel | Fichiers de verrouillage versionnés, `npm ci`. Aucun audit de dépendances automatisé en CI |
+| A04 | Cryptographic Failures | ✅ Couvert | Bcrypt coût 12, JWT RS256 (paire RSA 4096 jamais versionnée), mot de passe **jamais stocké en clair** (propriété transitoire + processor de hachage) |
+| A05 | Injection | ✅ Couvert | Requêtes paramétrées Doctrine, validation en liste blanche (`Assert`), contraintes **CHECK** en base (`check_role`, `check_statut`, `check_kilometrage`…), échappement React |
+| A06 | Insecure Design | ✅ Couvert | API sans état, moindre privilège, historique non destructif dès la conception |
+| A07 | Authentication Failures | ✅ Couvert | Limitation de débit sur les deux points publics, jeton de 15 min, message de connexion non discriminant |
+| A08 | Software or Data Integrity Failures | 🟡 Partiel | CI vérifiant style, analyse statique et tests. Pas de signature d'artefact ni de SBOM |
+| A09 | Security Logging & Alerting Failures | 🔴 Écart | Point faible reconnu : ni journal d'audit des accès, ni alerte sur événement de sécurité |
+| A10 | Mishandling of Exceptional Conditions | 🟡 Partiel | Codes HTTP corrects et messages génériques, debug désactivé en prod. Pas de revue dédiée des cas d'erreur |
 
 ---
 
@@ -340,15 +342,18 @@ role_hierarchy:
 - Signalement de problème par le conducteur
 - Conteneurisation Docker (3 services)
 - Pipeline CI/CD (GitHub Actions) : style + analyse statique + tests + build
-- 34 tests automatisés (100 % au vert)
-- Conformité RGPD (suppression de compte)
+- En-têtes HTTP de sécurité (X-Frame-Options, X-Content-Type-Options, Referrer-Policy, CSP, HSTS en prod)
+- Contrôle d'accès au niveau champ et objet (anti-élévation de privilèges, cloisonnement par conducteur)
+- 42 tests automatisés (100 % au vert) : 23 back (PHPUnit) + 19 front (Vitest)
+- Conformité RGPD (suppression de compte + politique de confidentialité)
 
 ### 6.2 Points à finaliser en juin (🔜)
 
 | Point | Plan d'action |
 |-------|---------------|
 | Couverture de code chiffrée | Activer le rapport de couverture en CI et viser ≥ 70 % sur les services métier |
-| Headers HTTP de sécurité | Ajouter `nelmio/security-bundle` (X-Frame-Options, HSTS) pour la production |
+| Audit de dépendances (A03) | Ajouter `composer audit` + `npm audit` à la pipeline CI |
+| Journalisation de sécurité (A09) | Journaliser les échecs d'authentification, refus d'accès et dépassements de rate limit |
 | PHPStan niveau 6 | Compléter le typage générique des collections (`array<...>`) pour monter d'un niveau |
 | Tests end-to-end front | Ajouter quelques scénarios de parcours utilisateur complets (Cypress/Playwright) |
 | Déploiement continu (CD) | Finaliser la publication d'image Docker + procédure de mise en production |

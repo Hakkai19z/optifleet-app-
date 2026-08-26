@@ -24,12 +24,14 @@ use Symfony\Component\Validator\Constraints as Assert;
     normalizationContext: ['groups' => ['plein:read']],
     denormalizationContext: ['groups' => ['plein:write']],
     operations: [
+        // Collection filtrée par PleinCollectionExtension (véhicules conduits).
         new GetCollection(security: "is_granted('ROLE_CONDUCTEUR')"),
         new Post(
             security: "is_granted('ROLE_CONDUCTEUR')",
             securityPostDenormalize: "is_granted('PLEIN_CREATE', object)"
         ),
-        new Get(security: "is_granted('ROLE_CONDUCTEUR')"),
+        // Lecture unitaire restreinte aux véhicules conduits (voir PleinVoter).
+        new Get(security: "is_granted('ROLE_GESTIONNAIRE') or is_granted('PLEIN_VIEW', object)"),
         new Put(security: "is_granted('ROLE_GESTIONNAIRE')"),
         new Patch(security: "is_granted('ROLE_GESTIONNAIRE')"),
         new Delete(security: "is_granted('ROLE_GESTIONNAIRE')"),

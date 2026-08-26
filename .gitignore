@@ -18,6 +18,7 @@
 /backend/.phpunit.result.cache
 /backend/coverage/
 /backend/coverage.xml
+/backend/config/reference.php
 
 # Node / React
 /frontend/node_modules/

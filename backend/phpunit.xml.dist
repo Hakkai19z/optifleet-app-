@@ -45,6 +45,12 @@
         <!-- ###- nelmio/cors-bundle ### -->
     </php>
 
+    <!-- Isolation transactionnelle : chaque test s'exécute dans une transaction
+         annulée à la fin (aucune fuite d'état entre tests). -->
+    <extensions>
+        <bootstrap class="DAMA\DoctrineTestBundle\PHPUnit\PHPUnitExtension"/>
+    </extensions>
+
     <testsuites>
         <testsuite name="Unit">
             <directory>tests/Unit</directory>

@@ -61,8 +61,16 @@ class AuthController extends AbstractController
             return $this->json(['message' => 'Le mot de passe doit contenir au moins 8 caractères'], Response::HTTP_BAD_REQUEST);
         }
 
+        if (! preg_match('/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/', $motDePasse)) {
+            return $this->json(['message' => 'Le mot de passe doit contenir au moins une minuscule, une majuscule et un chiffre'], Response::HTTP_BAD_REQUEST);
+        }
+
+        // Message volontairement générique pour ne pas confirmer l'existence d'un
+        // compte (limite l'énumération d'e-mails). L'énumération est en outre
+        // freinée par le rate limiter. Une anti-énumération totale nécessiterait
+        // un flux d'inscription avec vérification par e-mail.
         if ($em->getRepository(Utilisateur::class)->findOneBy(['email' => $email])) {
-            return $this->json(['message' => 'Un compte existe déjà avec cette adresse e-mail'], Response::HTTP_CONFLICT);
+            return $this->json(['message' => 'Inscription impossible avec ces informations. Essayez de vous connecter.'], Response::HTTP_CONFLICT);
         }
 
         $user = new Utilisateur();

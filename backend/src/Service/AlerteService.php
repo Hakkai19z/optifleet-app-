@@ -16,6 +16,9 @@ class AlerteService
     /** Nombre de jours avant expiration d'un document déclenchant une alerte. */
     private const DELAI_DOCUMENT_JOURS = 30;
 
+    /** Types d'alerte gérés automatiquement (échéances) — exclut les signalements manuels ('autre'). */
+    private const TYPES_ECHEANCE = ['assurance', 'CT', 'revision', 'vidange'];
+
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
         private readonly AlerteRepository $alerteRepository,
@@ -42,33 +45,79 @@ class AlerteService
     public function verifierEcheances(): int
     {
         $count = 0;
-        $entretienEchus = $this->entretienRepository->findEchus();
+        // Conditions d'alerte actuellement vraies, indexées par "vehiculeId:type".
+        $conditionsActives = [];
 
-        foreach ($entretienEchus as $entretien) {
-            if (! $this->alerteRepository->existsForVehiculeAndType($entretien->getVehicule(), $entretien->getType())) {
-                $this->creerAlerteEntretien($entretien);
+        foreach ($this->entretienRepository->findEchus() as $entretien) {
+            $vehicule = $entretien->getVehicule();
+            if (null === $vehicule) {
+                continue;
+            }
+            $type = $this->mapTypeEntretien($entretien->getType());
+            $conditionsActives[$this->cleCondition($vehicule, $type)] = true;
+
+            if (! $this->alerteRepository->existsForVehiculeAndType($vehicule, $type)) {
+                $this->creerAlerteEntretien($entretien, $type);
                 ++$count;
             }
         }
 
         // Documents expirés ou expirant prochainement (assurance, CT, etc.)
-        $documentsExpirant = $this->documentRepository->findExpirant(self::DELAI_DOCUMENT_JOURS);
-
-        foreach ($documentsExpirant as $document) {
+        foreach ($this->documentRepository->findExpirant(self::DELAI_DOCUMENT_JOURS) as $document) {
             $vehicule = $document->getVehicule();
             if (null === $vehicule) {
                 continue;
             }
-            $typeAlerte = $this->mapTypeDocument($document->getType());
-            if (! $this->alerteRepository->existsForVehiculeAndType($vehicule, $typeAlerte)) {
-                $this->creerAlerteDocument($document, $typeAlerte);
+            $type = $this->mapTypeDocument($document->getType());
+            $conditionsActives[$this->cleCondition($vehicule, $type)] = true;
+
+            if (! $this->alerteRepository->existsForVehiculeAndType($vehicule, $type)) {
+                $this->creerAlerteDocument($document, $type);
                 ++$count;
             }
         }
 
+        // Auto-résolution : une alerte d'échéance dont la condition n'existe plus
+        // (entretien réalisé, document renouvelé) passe à « resolue ». Les
+        // signalements manuels (type 'autre') ne sont jamais touchés.
+        $this->resoudreAlertesObsoletes($conditionsActives);
+
         $this->entityManager->flush();
 
         return $count;
+    }
+
+    private function cleCondition(Vehicule $vehicule, string $type): string
+    {
+        return $vehicule->getId() . ':' . $type;
+    }
+
+    /**
+     * @param array<string, true> $conditionsActives
+     */
+    private function resoudreAlertesObsoletes(array $conditionsActives): void
+    {
+        foreach ($this->alerteRepository->findActiveAlertes() as $alerte) {
+            if (! in_array($alerte->getType(), self::TYPES_ECHEANCE, true)) {
+                continue;
+            }
+            $vehicule = $alerte->getVehicule();
+            if (null === $vehicule) {
+                continue;
+            }
+            if (! isset($conditionsActives[$this->cleCondition($vehicule, $alerte->getType())])) {
+                $alerte->setStatut('resolue');
+            }
+        }
+    }
+
+    private function mapTypeEntretien(?string $typeEntretien): string
+    {
+        return match ($typeEntretien) {
+            'CT' => 'CT',
+            'vidange' => 'vidange',
+            default => 'revision',
+        };
     }
 
     /** Convertit un type de document en type d'alerte autorisé. */
@@ -108,7 +157,7 @@ class AlerteService
         $this->entityManager->persist($alerte);
     }
 
-    private function creerAlerteEntretien(Entretien $entretien): void
+    private function creerAlerteEntretien(Entretien $entretien, string $typeAlerte): void
     {
         $vehicule = $entretien->getVehicule();
         $message = sprintf(
@@ -123,7 +172,7 @@ class AlerteService
 
         $alerte = new Alerte();
         $alerte->setVehicule($vehicule);
-        $alerte->setType('CT' === $entretien->getType() ? 'CT' : ('vidange' === $entretien->getType() ? 'vidange' : 'revision'));
+        $alerte->setType($typeAlerte);
         $alerte->setMessage($message);
         $alerte->setDateEcheance($dateEcheance);
         $alerte->setStatut('en_attente');

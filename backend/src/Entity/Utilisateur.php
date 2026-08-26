@@ -6,9 +6,11 @@ use ApiPlatform\Metadata\ApiResource;
 use ApiPlatform\Metadata\Delete;
 use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\Patch;
 use ApiPlatform\Metadata\Post;
 use ApiPlatform\Metadata\Put;
 use App\Repository\UtilisateurRepository;
+use App\State\UtilisateurPasswordProcessor;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
@@ -25,9 +27,25 @@ use Symfony\Component\Validator\Constraints as Assert;
     denormalizationContext: ['groups' => ['utilisateur:write']],
     operations: [
         new GetCollection(security: "is_granted('ROLE_GESTIONNAIRE')"),
-        new Post(security: "is_granted('ROLE_ADMIN')"),
+        // Création : réservée à l'admin. Le rôle et le mot de passe (groupe
+        // utilisateur:admin) ne sont modifiables que sur cette opération et le
+        // Patch admin ; le mot de passe est haché par le processor dédié.
+        new Post(
+            security: "is_granted('ROLE_ADMIN')",
+            denormalizationContext: ['groups' => ['utilisateur:write', 'utilisateur:admin']],
+            processor: UtilisateurPasswordProcessor::class,
+        ),
         new Get(security: "is_granted('ROLE_ADMIN') or object == user"),
+        // Édition de profil (nom, prénom, email) : par l'admin ou l'utilisateur
+        // lui-même. Le groupe utilisateur:write NE contient PAS role/motDePasse,
+        // donc un utilisateur ne peut pas élever ses privilèges.
         new Put(security: "is_granted('ROLE_ADMIN') or object == user"),
+        // Modification du rôle et/ou du mot de passe : admin uniquement.
+        new Patch(
+            security: "is_granted('ROLE_ADMIN')",
+            denormalizationContext: ['groups' => ['utilisateur:write', 'utilisateur:admin']],
+            processor: UtilisateurPasswordProcessor::class,
+        ),
         new Delete(security: "is_granted('ROLE_ADMIN') or object == user"),
     ]
 )]
@@ -57,13 +75,27 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
     #[Groups(['utilisateur:read', 'utilisateur:write'])]
     private ?string $email = null;
 
+    // Hash bcrypt stocké en base. Volontairement hors de tout groupe de
+    // sérialisation : jamais exposé en lecture, jamais renseigné directement
+    // en écriture (on passe par plainMotDePasse + processor de hachage).
     #[ORM\Column(length: 255)]
-    #[Groups(['utilisateur:write'])]
     private ?string $motDePasse = null;
 
+    // Mot de passe en clair, non persisté. Fourni uniquement par une opération
+    // admin (groupe utilisateur:admin) puis haché par UtilisateurPasswordProcessor.
+    #[Assert\Length(min: 8, minMessage: 'Le mot de passe doit contenir au moins 8 caractères')]
+    #[Assert\Regex(
+        pattern: '/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/',
+        message: 'Le mot de passe doit contenir au moins une minuscule, une majuscule et un chiffre'
+    )]
+    #[Groups(['utilisateur:admin'])]
+    private ?string $plainMotDePasse = null;
+
+    // Le rôle n'est modifiable que par un admin (groupe utilisateur:admin),
+    // jamais via l'édition de profil (utilisateur:write) : pas d'auto-élévation.
     #[ORM\Column(length: 50)]
     #[Assert\Choice(choices: ['ADMIN', 'GESTIONNAIRE', 'CONDUCTEUR'])]
-    #[Groups(['utilisateur:read', 'utilisateur:write'])]
+    #[Groups(['utilisateur:read', 'utilisateur:admin'])]
     private string $role = 'CONDUCTEUR';
 
     #[ORM\Column]
@@ -137,6 +169,18 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
+    public function getPlainMotDePasse(): ?string
+    {
+        return $this->plainMotDePasse;
+    }
+
+    public function setPlainMotDePasse(?string $plainMotDePasse): static
+    {
+        $this->plainMotDePasse = $plainMotDePasse;
+
+        return $this;
+    }
+
     public function getRole(): string
     {
         return $this->role;
@@ -171,6 +215,7 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function eraseCredentials(): void
     {
+        $this->plainMotDePasse = null;
     }
 
     public function getAffectations(): Collection

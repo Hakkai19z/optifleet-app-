@@ -143,6 +143,11 @@ export default function Login() {
                 Créer un compte →
               </Link>
             </p>
+            <p className="text-xs text-slate-600 mt-4">
+              <Link to="/confidentialite" className="hover:text-slate-400">
+                Politique de confidentialité &amp; RGPD
+              </Link>
+            </p>
           </div>
         </div>
       </div>

@@ -1,4 +1,8 @@
 parameters:
+    # Valeur par défaut si la variable d'environnement n'est pas définie (ex.
+    # environnement de test) : le géocodage est alors simplement désactivé
+    # (VehiculeService::geocodeAdresse ignore une clé vide) plutôt que de planter.
+    env(GOOGLE_MAPS_API_KEY): ''
     google_maps_api_key: '%env(GOOGLE_MAPS_API_KEY)%'
     mailer_from_address: '%env(MAILER_FROM_ADDRESS)%'
     mailer_from_name: '%env(MAILER_FROM_NAME)%'
@@ -16,3 +20,14 @@ services:
             - '../src/DependencyInjection/'
             - '../src/Entity/'
             - '../src/Kernel.php'
+
+    # Processor de hachage du mot de passe pour les opérations API Platform sur
+    # Utilisateur : décore le processor Doctrine de persistance par défaut.
+    App\State\UtilisateurPasswordProcessor:
+        bind:
+            $persistProcessor: '@api_platform.doctrine.orm.state.persist_processor'
+
+    # Force le conducteur = utilisateur courant à la création d'une réservation.
+    App\State\ReservationProcessor:
+        bind:
+            $persistProcessor: '@api_platform.doctrine.orm.state.persist_processor'

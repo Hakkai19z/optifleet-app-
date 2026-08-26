@@ -25,7 +25,7 @@ use Symfony\Component\Validator\Constraints as Assert;
     operations: [
         new GetCollection(security: "is_granted('ROLE_CONDUCTEUR')"),
         new Post(security: "is_granted('ROLE_GESTIONNAIRE')"),
-        new Get(security: "is_granted('ROLE_CONDUCTEUR')"),
+        new Get(security: "is_granted('ROLE_GESTIONNAIRE') or is_granted('VOIR', object)"),
         new Put(security: "is_granted('ROLE_GESTIONNAIRE')"),
         new Patch(security: "is_granted('ROLE_GESTIONNAIRE')"),
         new Delete(security: "is_granted('ROLE_GESTIONNAIRE')"),

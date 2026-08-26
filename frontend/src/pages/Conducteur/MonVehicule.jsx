@@ -65,6 +65,9 @@ export default function MonVehicule() {
   const [showSignalModal, setShowSignalModal] = useState(false)
   const [signalMessage, setSignalMessage] = useState('')
   const [signalLoading, setSignalLoading] = useState(false)
+  const [showKmModal, setShowKmModal] = useState(false)
+  const [kmValue, setKmValue] = useState('')
+  const [kmLoading, setKmLoading] = useState(false)
   const { addToast } = useToastStore()
 
   useEffect(() => {
@@ -86,6 +89,28 @@ export default function MonVehicule() {
       addToast('Erreur lors du signalement', 'error')
     } finally {
       setSignalLoading(false)
+    }
+  }
+
+  const openKmModal = () => {
+    setKmValue(String(data?.vehicule?.kilometrage ?? ''))
+    setShowKmModal(true)
+  }
+
+  const handleMajKm = async (e) => {
+    e.preventDefault()
+    const km = parseInt(kmValue, 10)
+    if (Number.isNaN(km)) return
+    setKmLoading(true)
+    try {
+      const res = await conducteurService.majKilometrage(km)
+      setData((d) => ({ ...d, vehicule: { ...d.vehicule, kilometrage: res.kilometrage } }))
+      addToast('Kilométrage mis à jour')
+      setShowKmModal(false)
+    } catch (err) {
+      addToast(err?.response?.data?.message || 'Erreur lors de la mise à jour', 'error')
+    } finally {
+      setKmLoading(false)
     }
   }
 
@@ -132,12 +157,21 @@ export default function MonVehicule() {
         title="Mon véhicule"
         subtitle="Informations et historique de votre véhicule affecté"
         actions={
-          <Button variant="secondary" onClick={() => setShowSignalModal(true)}>
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
-            Signaler un problème
-          </Button>
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" onClick={openKmModal}>
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10l1 1h1m8-1V7a1 1 0 011-1h2l3 4v5l-1 1h-1m-6 0h6" />
+              </svg>
+              Mettre à jour le km
+            </Button>
+            <Button variant="secondary" onClick={() => setShowSignalModal(true)}>
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              Signaler un problème
+            </Button>
+          </div>
         }
       />
 
@@ -292,6 +326,33 @@ export default function MonVehicule() {
               {signalLoading ? 'Envoi...' : 'Envoyer le signalement'}
             </Button>
             <Button type="button" variant="ghost" onClick={() => setShowSignalModal(false)}>Annuler</Button>
+          </div>
+        </form>
+      </Modal>
+
+      <Modal isOpen={showKmModal} onClose={() => setShowKmModal(false)} title="Mettre à jour le kilométrage">
+        <form onSubmit={handleMajKm} className="space-y-4">
+          <p className="text-sm text-slate-400">
+            Saisissez le kilométrage actuel de votre véhicule. Il ne peut pas être inférieur au dernier relevé
+            ({vehicule.kilometrage?.toLocaleString('fr-FR')} km).
+          </p>
+          <div>
+            <label className="form-label">Kilométrage (km)</label>
+            <input
+              type="number"
+              min={vehicule.kilometrage}
+              step="1"
+              value={kmValue}
+              onChange={(e) => setKmValue(e.target.value)}
+              className="form-input"
+              required
+            />
+          </div>
+          <div className="flex gap-3">
+            <Button type="submit" variant="primary" disabled={kmLoading || kmValue === ''}>
+              {kmLoading ? 'Enregistrement...' : 'Enregistrer'}
+            </Button>
+            <Button type="button" variant="ghost" onClick={() => setShowKmModal(false)}>Annuler</Button>
           </div>
         </form>
       </Modal>

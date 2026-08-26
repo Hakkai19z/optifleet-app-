@@ -2,16 +2,22 @@
 
 namespace App\Security;
 
-use App\Entity\Plein;
+use App\Entity\Alerte;
+use App\Entity\Document;
+use App\Entity\Entretien;
 use App\Entity\Utilisateur;
 use App\Repository\AffectationRepository;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Authorization\Voter\Voter;
 
-class PleinVoter extends Voter
+/**
+ * Lecture unitaire d'une donnée rattachée à un véhicule (entretien, alerte,
+ * document) : autorisée pour un gestionnaire, ou pour un conducteur ayant (ou
+ * ayant eu) une affectation sur le véhicule concerné.
+ */
+class VehiculeOwnedVoter extends Voter
 {
-    public const CREATE = 'PLEIN_CREATE';
-    public const VIEW = 'PLEIN_VIEW';
+    public const VOIR = 'VOIR';
 
     public function __construct(private readonly AffectationRepository $affectationRepository)
     {
@@ -19,15 +25,13 @@ class PleinVoter extends Voter
 
     protected function supports(string $attribute, mixed $subject): bool
     {
-        return in_array($attribute, [self::CREATE, self::VIEW], true) && $subject instanceof Plein;
+        return self::VOIR === $attribute
+            && ($subject instanceof Entretien || $subject instanceof Alerte || $subject instanceof Document);
     }
 
     protected function voteOnAttribute(string $attribute, mixed $subject, TokenInterface $token): bool
     {
-        /** @var Plein $plein */
-        $plein = $subject;
         $user = $token->getUser();
-
         if (! $user instanceof Utilisateur) {
             return false;
         }
@@ -36,17 +40,11 @@ class PleinVoter extends Voter
             return true;
         }
 
-        $vehicule = $plein->getVehicule();
+        $vehicule = $subject->getVehicule();
         if (null === $vehicule) {
             return false;
         }
 
-        return match ($attribute) {
-            // Création : uniquement pour le véhicule actuellement affecté.
-            self::CREATE => $this->affectationRepository->isActiveForConducteurAndVehicule($user, $vehicule),
-            // Lecture : véhicules conduits (affectation active ou passée).
-            self::VIEW => $this->affectationRepository->existsForConducteurAndVehicule($user, $vehicule),
-            default => false,
-        };
+        return $this->affectationRepository->existsForConducteurAndVehicule($user, $vehicule);
     }
 }
