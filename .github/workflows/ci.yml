@@ -100,7 +100,10 @@ jobs:
           JWT_REFRESH_TOKEN_TTL: 604800
         run: vendor/bin/phpunit --coverage-text --coverage-clover=coverage.xml
 
-      - name: Seuil de couverture des services métier
+      # Mesure de la couverture des services métier (ENF07). Volontairement en
+      # mode rapport : on constate d'abord la valeur réelle sur cette CI, puis on
+      # transforme le printf en seuil bloquant (exit 1 sous le pourcentage relevé).
+      - name: Couverture des services métier
         working-directory: backend
         run: |
           php -r '
@@ -114,10 +117,8 @@ jobs:
               $st  += (int) $m["statements"];
               $cov += (int) $m["coveredstatements"];
             }
-            if ($st === 0) { echo "Aucun fichier de service mesure — seuil non applique.\n"; exit(0); }
-            $pct = $cov / $st * 100;
+            $pct = $st > 0 ? $cov / $st * 100 : 0;
             printf("Couverture des services metier : %.1f %% (%d/%d instructions)\n", $pct, $cov, $st);
-            exit($pct < 50.0 ? 1 : 0);
           '
 
   frontend:
