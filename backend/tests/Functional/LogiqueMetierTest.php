@@ -83,6 +83,7 @@ class LogiqueMetierTest extends WebTestCase
     private function firstVehiculeId(KernelBrowser $client, string $token): int
     {
         $client->request('GET', '/api/vehicules', [], [], $this->h($token));
+
         return $this->json($client)[0]['id'];
     }
 
