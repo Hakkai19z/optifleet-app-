@@ -51,6 +51,10 @@ jobs:
         working-directory: backend
         run: composer install --no-interaction --prefer-dist
 
+      - name: Audit des dépendances PHP
+        working-directory: backend
+        run: composer audit --locked
+
       - name: Check code style
         working-directory: backend
         run: vendor/bin/php-cs-fixer fix --dry-run --diff
@@ -96,6 +100,26 @@ jobs:
           JWT_REFRESH_TOKEN_TTL: 604800
         run: vendor/bin/phpunit --coverage-text --coverage-clover=coverage.xml
 
+      - name: Seuil de couverture des services métier
+        working-directory: backend
+        run: |
+          php -r '
+            $x = simplexml_load_file("coverage.xml");
+            $st = 0; $cov = 0;
+            foreach ($x->xpath("//file") as $f) {
+              $name = (string) $f["name"];
+              if (strpos($name, "src/Service") === false) continue;
+              if (strpos($name, "NotificationService") !== false) continue;
+              $m = $f->metrics;
+              $st  += (int) $m["statements"];
+              $cov += (int) $m["coveredstatements"];
+            }
+            if ($st === 0) { echo "Aucun fichier de service mesure — seuil non applique.\n"; exit(0); }
+            $pct = $cov / $st * 100;
+            printf("Couverture des services metier : %.1f %% (%d/%d instructions)\n", $pct, $cov, $st);
+            exit($pct < 50.0 ? 1 : 0);
+          '
+
   frontend:
     name: Frontend Tests
     runs-on: ubuntu-latest
@@ -113,6 +137,10 @@ jobs:
       - name: Install dependencies
         working-directory: frontend
         run: npm ci
+
+      - name: Audit des dépendances npm
+        working-directory: frontend
+        run: npm audit --omit=dev --audit-level=high
 
       - name: Lint
         working-directory: frontend

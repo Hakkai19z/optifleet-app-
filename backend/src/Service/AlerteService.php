@@ -5,10 +5,12 @@ namespace App\Service;
 use App\Entity\Alerte;
 use App\Entity\Document;
 use App\Entity\Entretien;
+use App\Entity\Utilisateur;
 use App\Entity\Vehicule;
 use App\Repository\AlerteRepository;
 use App\Repository\DocumentRepository;
 use App\Repository\EntretienRepository;
+use App\Repository\UtilisateurRepository;
 use Doctrine\ORM\EntityManagerInterface;
 
 class AlerteService
@@ -19,11 +21,16 @@ class AlerteService
     /** Types d'alerte gérés automatiquement (échéances) — exclut les signalements manuels ('autre'). */
     private const TYPES_ECHEANCE = ['assurance', 'CT', 'revision', 'vidange'];
 
+    /** @var Utilisateur[]|null Cache des destinataires (gestionnaires + admins). */
+    private ?array $gestionnairesCache = null;
+
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
         private readonly AlerteRepository $alerteRepository,
         private readonly EntretienRepository $entretienRepository,
         private readonly DocumentRepository $documentRepository,
+        private readonly UtilisateurRepository $utilisateurRepository,
+        private readonly NotificationService $notification,
     ) {
     }
 
@@ -39,14 +46,17 @@ class AlerteService
         $this->entityManager->persist($alerte);
         $this->entityManager->flush();
 
+        $this->notifierGestionnaires($alerte);
+
         return $alerte;
     }
 
     public function verifierEcheances(): int
     {
-        $count = 0;
         // Conditions d'alerte actuellement vraies, indexées par "vehiculeId:type".
         $conditionsActives = [];
+        // Alertes réellement créées ce passage, à notifier une fois persistées.
+        $nouvelles = [];
 
         foreach ($this->entretienRepository->findEchus() as $entretien) {
             $vehicule = $entretien->getVehicule();
@@ -57,8 +67,7 @@ class AlerteService
             $conditionsActives[$this->cleCondition($vehicule, $type)] = true;
 
             if (! $this->alerteRepository->existsForVehiculeAndType($vehicule, $type)) {
-                $this->creerAlerteEntretien($entretien, $type);
-                ++$count;
+                $nouvelles[] = $this->creerAlerteEntretien($entretien, $type);
             }
         }
 
@@ -72,8 +81,7 @@ class AlerteService
             $conditionsActives[$this->cleCondition($vehicule, $type)] = true;
 
             if (! $this->alerteRepository->existsForVehiculeAndType($vehicule, $type)) {
-                $this->creerAlerteDocument($document, $type);
-                ++$count;
+                $nouvelles[] = $this->creerAlerteDocument($document, $type);
             }
         }
 
@@ -84,7 +92,12 @@ class AlerteService
 
         $this->entityManager->flush();
 
-        return $count;
+        // Notification par courriel une fois les alertes réellement persistées.
+        foreach ($nouvelles as $alerte) {
+            $this->notifierGestionnaires($alerte);
+        }
+
+        return count($nouvelles);
     }
 
     private function cleCondition(Vehicule $vehicule, string $type): string
@@ -111,6 +124,21 @@ class AlerteService
         }
     }
 
+    /**
+     * Prévient les gestionnaires et administrateurs de la création d'une alerte.
+     * La liste des destinataires est mise en cache pour éviter une requête par alerte.
+     */
+    private function notifierGestionnaires(Alerte $alerte): void
+    {
+        if (null === $this->gestionnairesCache) {
+            $this->gestionnairesCache = $this->utilisateurRepository->findBy([
+                'role' => ['GESTIONNAIRE', 'ADMIN'],
+            ]);
+        }
+
+        $this->notification->notifierAlerte($alerte, $this->gestionnairesCache);
+    }
+
     private function mapTypeEntretien(?string $typeEntretien): string
     {
         return match ($typeEntretien) {
@@ -130,7 +158,7 @@ class AlerteService
         };
     }
 
-    private function creerAlerteDocument(Document $document, string $typeAlerte): void
+    private function creerAlerteDocument(Document $document, string $typeAlerte): Alerte
     {
         $vehicule = $document->getVehicule();
         $jours = $document->getJoursAvantExpiration();
@@ -155,9 +183,11 @@ class AlerteService
         $alerte->setStatut('en_attente');
 
         $this->entityManager->persist($alerte);
+
+        return $alerte;
     }
 
-    private function creerAlerteEntretien(Entretien $entretien, string $typeAlerte): void
+    private function creerAlerteEntretien(Entretien $entretien, string $typeAlerte): Alerte
     {
         $vehicule = $entretien->getVehicule();
         $message = sprintf(
@@ -178,6 +208,8 @@ class AlerteService
         $alerte->setStatut('en_attente');
 
         $this->entityManager->persist($alerte);
+
+        return $alerte;
     }
 
     public function countActiveAlertes(): int

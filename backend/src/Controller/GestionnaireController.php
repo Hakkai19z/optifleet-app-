@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\Affectation;
 use App\Entity\Utilisateur;
 use App\Entity\Vehicule;
+use App\Service\NotificationService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -87,7 +88,7 @@ class GestionnaireController extends AbstractController
     }
 
     #[Route('/affecter', name: 'gestionnaire_affecter', methods: ['POST'])]
-    public function affecterVehicule(Request $request, EntityManagerInterface $em): JsonResponse
+    public function affecterVehicule(Request $request, EntityManagerInterface $em, NotificationService $notification): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
         $conducteurId = $data['conducteurId'] ?? null;
@@ -154,6 +155,8 @@ class GestionnaireController extends AbstractController
 
         $em->persist($affectation);
         $em->flush();
+
+        $notification->notifierAffectation($conducteur, $vehicule);
 
         return $this->json([
             'message' => sprintf('Véhicule %s affecté à %s %s', $vehicule->getImmatriculation(), $conducteur->getPrenom(), $conducteur->getNom()),

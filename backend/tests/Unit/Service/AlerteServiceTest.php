@@ -7,7 +7,9 @@ use App\Entity\Vehicule;
 use App\Repository\AlerteRepository;
 use App\Repository\DocumentRepository;
 use App\Repository\EntretienRepository;
+use App\Repository\UtilisateurRepository;
 use App\Service\AlerteService;
+use App\Service\NotificationService;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -19,6 +21,8 @@ class AlerteServiceTest extends TestCase
     private AlerteRepository&MockObject $alerteRepository;
     private EntretienRepository&MockObject $entretienRepository;
     private DocumentRepository&MockObject $documentRepository;
+    private UtilisateurRepository&MockObject $utilisateurRepository;
+    private NotificationService&MockObject $notification;
 
     protected function setUp(): void
     {
@@ -26,12 +30,16 @@ class AlerteServiceTest extends TestCase
         $this->alerteRepository = $this->createMock(AlerteRepository::class);
         $this->entretienRepository = $this->createMock(EntretienRepository::class);
         $this->documentRepository = $this->createMock(DocumentRepository::class);
+        $this->utilisateurRepository = $this->createMock(UtilisateurRepository::class);
+        $this->notification = $this->createMock(NotificationService::class);
 
         $this->alerteService = new AlerteService(
             $this->entityManager,
             $this->alerteRepository,
             $this->entretienRepository,
-            $this->documentRepository
+            $this->documentRepository,
+            $this->utilisateurRepository,
+            $this->notification
         );
     }
 

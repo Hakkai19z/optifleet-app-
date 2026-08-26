@@ -68,3 +68,6 @@ Desktop.ini
 *.temp
 *.bak
 *.backup
+
+# Dossier de travail génération mémoire
+/docs/_mem/

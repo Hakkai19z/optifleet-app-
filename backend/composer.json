@@ -57,7 +57,13 @@
             "symfony/flex": true,
             "symfony/runtime": true
         },
-        "sort-packages": true
+        "sort-packages": true,
+        "audit": {
+            "ignore": {
+                "PKSA-8kfs-m8zw-ggzs": "api-platform/core 3.4 (sévérité moyenne) — correctif dans la branche 4.x ; montée majeure suivie via Dependabot, hors périmètre du dépôt.",
+                "PKSA-3ncz-km6v-5vjr": "api-platform/core 3.4 (sévérité moyenne) — idem ; les opérations exposées sont déjà protégées par des voters au niveau objet (cf. chapitre IX)."
+            }
+        }
     },
     "autoload": {
         "psr-4": {

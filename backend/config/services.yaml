@@ -4,6 +4,11 @@ parameters:
     # (VehiculeService::geocodeAdresse ignore une clé vide) plutôt que de planter.
     env(GOOGLE_MAPS_API_KEY): ''
     google_maps_api_key: '%env(GOOGLE_MAPS_API_KEY)%'
+    # Défauts sûrs si les variables ne sont pas définies (env. de test/CI) :
+    # aucun envoi réel, jamais de plantage à l'instanciation du mailer.
+    env(MAILER_DSN): 'null://null'
+    env(MAILER_FROM_ADDRESS): 'noreply@optifleet.fr'
+    env(MAILER_FROM_NAME): 'OptiFleet'
     mailer_from_address: '%env(MAILER_FROM_ADDRESS)%'
     mailer_from_name: '%env(MAILER_FROM_NAME)%'
 
@@ -31,3 +36,9 @@ services:
     App\State\ReservationProcessor:
         bind:
             $persistProcessor: '@api_platform.doctrine.orm.state.persist_processor'
+
+    # Notifications par courriel (affectations, alertes).
+    App\Service\NotificationService:
+        arguments:
+            $fromAddress: '%mailer_from_address%'
+            $fromName: '%mailer_from_name%'
